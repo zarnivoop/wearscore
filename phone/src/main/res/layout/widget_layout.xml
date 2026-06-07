@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/widget_root"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="@android:color/white"
+    android:padding="12dp"
+    android:gravity="center_vertical">
+
+    <TextView
+        android:id="@+id/widget_winner"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="SquashScore"
+        android:textSize="14sp"
+        android:textColor="#1B5E20"
+        android:textStyle="bold"
+        android:maxLines="1"
+        android:ellipsize="end" />
+
+    <TextView
+        android:id="@+id/widget_time"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Start a match"
+        android:textSize="11sp"
+        android:textColor="#757575"
+        android:maxLines="1" />
+
+    <TextView
+        android:id="@+id/widget_health"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="on your watch"
+        android:textSize="11sp"
+        android:textColor="#FF5252"
+        android:maxLines="1" />
+
+</LinearLayout>
