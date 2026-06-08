@@ -56,7 +56,8 @@ fun ThreePlayerScreen(
     onVoiceEnabledChanged: (Boolean) -> Unit,
     onScore: (playerIndex: Int) -> Unit,
     onUndo: () -> Unit,
-    onEndGame: () -> Unit
+    onEndGame: () -> Unit,
+    isAmbient: Boolean = false
 ) {
     if (match.selfScoreOnly) {
         SelfScoreScreen(
@@ -68,7 +69,8 @@ fun ThreePlayerScreen(
             onVoiceEnabledChanged = onVoiceEnabledChanged,
             onScore = { onScore(0) },
             onUndo = onUndo,
-            onEndGame = onEndGame
+            onEndGame = onEndGame,
+            isAmbient = isAmbient
         )
     } else {
         CutThroatScreen(
@@ -77,7 +79,8 @@ fun ThreePlayerScreen(
             onVoiceEnabledChanged = onVoiceEnabledChanged,
             onScore = onScore,
             onUndo = onUndo,
-            onEndGame = onEndGame
+            onEndGame = onEndGame,
+            isAmbient = isAmbient
         )
     }
 }
@@ -94,8 +97,24 @@ private fun SelfScoreScreen(
     onVoiceEnabledChanged: (Boolean) -> Unit,
     onScore: () -> Unit,
     onUndo: () -> Unit,
-    onEndGame: () -> Unit
+    onEndGame: () -> Unit,
+    isAmbient: Boolean = false
 ) {
+    // Ambient: just the number — burn-in safe, no interactive elements.
+    if (isAmbient) {
+        Box(
+            modifier = Modifier.fillMaxSize().background(Color.Black),
+            contentAlignment = Alignment.Center
+        ) {
+            Text(
+                text = "$name: $score",
+                style = MaterialTheme.typography.display2,
+                fontWeight = FontWeight.Bold,
+                color = Color.White
+            )
+        }
+        return
+    }
     Box(modifier = Modifier.fillMaxSize()) {
         // Big tap area
         Box(
@@ -177,11 +196,35 @@ private fun CutThroatScreen(
     onVoiceEnabledChanged: (Boolean) -> Unit,
     onScore: (playerIndex: Int) -> Unit,
     onUndo: () -> Unit,
-    onEndGame: () -> Unit
+    onEndGame: () -> Unit,
+    isAmbient: Boolean = false
 ) {
     val server = match.server ?: return
     val receiver = match.receiver ?: return
     val waiting = match.waitingPlayer
+
+    // Ambient: compact scoreboard — no backgrounds, no interactivity.
+    if (isAmbient) {
+        Box(
+            modifier = Modifier.fillMaxSize().background(Color.Black),
+            contentAlignment = Alignment.Center
+        ) {
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                Text(
+                    text = match.players.joinToString("  ·  ") { "${it.name}: ${it.score}" },
+                    style = MaterialTheme.typography.title1,
+                    fontWeight = FontWeight.Bold,
+                    color = Color.White
+                )
+                Text(
+                    text = "${server.name} serving",
+                    style = MaterialTheme.typography.caption3,
+                    color = Color.White.copy(alpha = 0.35f)
+                )
+            }
+        }
+        return
+    }
 
     Box(modifier = Modifier.fillMaxSize()) {
         Column(modifier = Modifier.fillMaxSize()) {

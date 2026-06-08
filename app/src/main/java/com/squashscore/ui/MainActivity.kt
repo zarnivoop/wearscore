@@ -10,20 +10,29 @@ import androidx.wear.ambient.AmbientModeSupport
 import com.squashscore.model.Sport
 import com.squashscore.viewmodel.MatchViewModel
 
+import android.view.WindowManager
+import androidx.compose.runtime.mutableStateOf
+
 class MainActivity : FragmentActivity(), AmbientModeSupport.AmbientCallbackProvider {
 
     private val vm: MatchViewModel by viewModels()
     private lateinit var ambientController: AmbientModeSupport.AmbientController
+    private val isAmbient = mutableStateOf(false)
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
+        // Keep CPU + screen alive during ambient — prevents the system
+        // from dismissing the activity when the display dims.
+        window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
         ambientController = AmbientModeSupport.attach(this)
 
         setContent {
             val state by vm.uiState.collectAsState()
             var currentSport = vm.loadLastSport()
 
+            // Pass ambient state so each screen can render a minimal,
+            // black-and-white display that Wear OS recognises as ambient-aware.
             when (state.screen) {
                 MatchViewModel.Screen.SETUP -> {
                     SetupScreen(
@@ -54,7 +63,8 @@ class MainActivity : FragmentActivity(), AmbientModeSupport.AmbientCallbackProvi
                             onVoiceEnabledChanged = { vm.setVoiceEnabled(it) },
                             onScore = { vm.scorePoint(it) },
                             onUndo = { vm.undo() },
-                            onEndGame = { vm.endGame() }
+                            onEndGame = { vm.endGame() },
+                            isAmbient = isAmbient.value
                         )
                     } else {
                         ScoreScreen(
@@ -65,7 +75,8 @@ class MainActivity : FragmentActivity(), AmbientModeSupport.AmbientCallbackProvi
                             onScore = { vm.scorePoint(it) },
                             onUndo = { vm.undo() },
                             onEndGame = { vm.endGame() },
-                            onContinue = { vm.continueGame() }
+                            onContinue = { vm.continueGame() },
+                            isAmbient = isAmbient.value
                         )
                     }
                 }
@@ -89,13 +100,13 @@ class MainActivity : FragmentActivity(), AmbientModeSupport.AmbientCallbackProvi
     override fun getAmbientCallback(): AmbientModeSupport.AmbientCallback {
         return object : AmbientModeSupport.AmbientCallback() {
             override fun onEnterAmbient(ambientDetails: Bundle?) {
-                // Screen dimmed — app stays alive
+                isAmbient.value = true
             }
             override fun onExitAmbient() {
-                // Full brightness
+                isAmbient.value = false
             }
             override fun onUpdateAmbient() {
-                // Periodic ambient update
+                // Periodic ambient refresh — keep the score visible
             }
         }
     }

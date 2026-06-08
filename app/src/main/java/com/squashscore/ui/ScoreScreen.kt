@@ -63,12 +63,43 @@ fun ScoreScreen(
     onScore: (playerIndex: Int) -> Unit,
     onUndo: () -> Unit,
     onEndGame: () -> Unit,
-    onContinue: () -> Unit
+    onContinue: () -> Unit,
+    isAmbient: Boolean = false
 ) {
     val server = match.server
     val receiver = match.receiver
     val isResting = match.state == GameState.BETWEEN_GAMES
     if (server == null || receiver == null) return
+
+    // Ambient: strip everything but scores — burn-in safe, readable at a glance.
+    if (isAmbient) {
+        Box(modifier = Modifier.fillMaxSize().background(Color.Black)) {
+            Column(
+                modifier = Modifier.fillMaxSize(),
+                verticalArrangement = Arrangement.Center,
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Text(
+                    text = server.score.toString(),
+                    style = MaterialTheme.typography.display3,
+                    fontWeight = FontWeight.Bold,
+                    color = Color.White
+                )
+                Text(
+                    text = "${server.name}  –  ${receiver.name}",
+                    style = MaterialTheme.typography.caption1,
+                    color = Color.White.copy(alpha = 0.4f)
+                )
+                Text(
+                    text = receiver.score.toString(),
+                    style = MaterialTheme.typography.display3,
+                    fontWeight = FontWeight.Bold,
+                    color = Color.White
+                )
+            }
+        }
+        return
+    }
 
     Box(modifier = Modifier.fillMaxSize()) {
         if (isResting) {

@@ -17,6 +17,7 @@
             android:exported="true"
             android:supportsAmbientMode="true"
             android:configChanges="uiMode"
+            android:keepScreenOn="true"
             android:taskAffinity=""
             android:allowEmbedded="true">
             <intent-filter>
