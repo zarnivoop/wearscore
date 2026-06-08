@@ -1,17 +1,14 @@
 package com.squashscore.ui
 
 import android.os.Bundle
+import android.view.WindowManager
 import androidx.activity.compose.setContent
 import androidx.activity.viewModels
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
+import androidx.compose.runtime.*
 import androidx.fragment.app.FragmentActivity
 import androidx.wear.ambient.AmbientModeSupport
 import com.squashscore.model.Sport
 import com.squashscore.viewmodel.MatchViewModel
-
-import android.view.WindowManager
-import androidx.compose.runtime.mutableStateOf
 
 class MainActivity : FragmentActivity(), AmbientModeSupport.AmbientCallbackProvider {
 
@@ -22,17 +19,23 @@ class MainActivity : FragmentActivity(), AmbientModeSupport.AmbientCallbackProvi
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        // Keep CPU + screen alive during ambient — prevents the system
-        // from dismissing the activity when the display dims.
-        window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
         ambientController = AmbientModeSupport.attach(this)
 
         setContent {
             val state by vm.uiState.collectAsState()
             var currentSport = vm.loadLastSport()
 
-            // Pass ambient state so each screen can render a minimal,
-            // black-and-white display that Wear OS recognises as ambient-aware.
+            // Only keep CPU alive during an active game — setup/summary
+            // screens should let the watch dim and sleep normally.
+            val keepScreenOn = state.screen == MatchViewModel.Screen.PLAYING
+            LaunchedEffect(keepScreenOn) {
+                if (keepScreenOn) {
+                    window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+                } else {
+                    window.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+                }
+            }
+
             when (state.screen) {
                 MatchViewModel.Screen.SETUP -> {
                     SetupScreen(
