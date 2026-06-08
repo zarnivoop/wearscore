@@ -13,6 +13,6 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "SquashScore"
+rootProject.name = "Tally"
 include(":app")
 include(":phone")

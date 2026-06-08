@@ -18,6 +18,41 @@ import androidx.compose.ui.unit.sp
 import androidx.wear.compose.material.*
 import com.squashscore.model.GameState
 import com.squashscore.model.Match
+import com.squashscore.model.Sport
+
+// ── Sport color mapping ──
+
+private fun sportServerBg(sportName: String): Color = when (Sport.fromName(sportName)) {
+    Sport.SQUASH -> Color(0xFF1B5E20)
+    Sport.BADMINTON -> Color(0xFF0D47A1)
+    Sport.TENNIS -> Color(0xFF795548)
+    Sport.TABLE_TENNIS -> Color(0xFF4A148C)
+    Sport.PICKLEBALL -> Color(0xFF006064)
+    Sport.RACQUETBALL -> Color(0xFFB71C1C)
+    Sport.PADEL -> Color(0xFF2E7D32)
+}
+
+private fun sportReceiverBg(sportName: String): Color = when (Sport.fromName(sportName)) {
+    Sport.SQUASH -> Color(0xFF0D47A1)
+    Sport.BADMINTON -> Color(0xFF4A148C)
+    Sport.TENNIS -> Color(0xFFF57F17)
+    Sport.TABLE_TENNIS -> Color(0xFF1565C0)
+    Sport.PICKLEBALL -> Color(0xFF00838F)
+    Sport.RACQUETBALL -> Color(0xFF1B5E20)
+    Sport.PADEL -> Color(0xFF558B2F)
+}
+
+private fun sportAccent(sportName: String): Color = when (Sport.fromName(sportName)) {
+    Sport.SQUASH -> Color(0xFF4CAF50)
+    Sport.BADMINTON -> Color(0xFF64B5F6)
+    Sport.TENNIS -> Color(0xFFFFB300)
+    Sport.TABLE_TENNIS -> Color(0xFFAB47BC)
+    Sport.PICKLEBALL -> Color(0xFF26C6DA)
+    Sport.RACQUETBALL -> Color(0xFFEF5350)
+    Sport.PADEL -> Color(0xFF66BB6A)
+}
+
+// ── Score screen ──
 
 @Composable
 fun ScoreScreen(
@@ -33,6 +68,7 @@ fun ScoreScreen(
     val server = match.server
     val receiver = match.receiver
     val isResting = match.state == GameState.BETWEEN_GAMES
+    if (server == null || receiver == null) return
 
     Box(modifier = Modifier.fillMaxSize()) {
         if (isResting) {
@@ -45,7 +81,7 @@ fun ScoreScreen(
                 modifier = Modifier
                     .weight(1f)
                     .fillMaxWidth()
-                    .background(Color(0xFF1B5E20).copy(alpha = 0.6f))
+                    .background(sportServerBg(match.sportName).copy(alpha = 0.6f))
                     .clickable(enabled = !isResting) { onScore(match.serverIndex) },
                 contentAlignment = Alignment.Center
             ) {
@@ -64,7 +100,7 @@ fun ScoreScreen(
                     Text(
                         if (match.simpleMode) "Player 1" else "SERVING",
                         style = MaterialTheme.typography.caption3,
-                        color = Color(0xFF4CAF50)
+                        color = sportAccent(match.sportName)
                     )
                     if (!match.simpleMode) {
                         Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
@@ -163,7 +199,7 @@ fun ScoreScreen(
                 modifier = Modifier
                     .weight(1f)
                     .fillMaxWidth()
-                    .background(Color(0xFF0D47A1).copy(alpha = 0.4f))
+                    .background(sportReceiverBg(match.sportName).copy(alpha = 0.4f))
                     .clickable(enabled = !isResting) { onScore(match.receiverIndex) },
                 contentAlignment = Alignment.Center
             ) {
@@ -182,7 +218,7 @@ fun ScoreScreen(
                     Text(
                         if (match.simpleMode) "Player 2" else "RECEIVING",
                         style = MaterialTheme.typography.caption3,
-                        color = Color(0xFF64B5F6)
+                        color = sportAccent(match.sportName).copy(alpha = 0.8f)
                     )
                     if (!match.simpleMode) {
                         Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {

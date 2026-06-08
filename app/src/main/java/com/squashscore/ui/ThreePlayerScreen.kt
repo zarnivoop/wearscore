@@ -18,6 +18,31 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.wear.compose.material.*
 import com.squashscore.model.Match
+import com.squashscore.model.Sport
+
+// ── Sport color helpers (local copies — keep in sync with ScoreScreen.kt) ──
+
+private fun sportServerBg(sportName: String): Color = when (Sport.fromName(sportName)) {
+    Sport.SQUASH -> Color(0xFF1B5E20)
+    Sport.BADMINTON -> Color(0xFF0D47A1)
+    Sport.TENNIS -> Color(0xFF795548)
+    Sport.TABLE_TENNIS -> Color(0xFF4A148C)
+    Sport.PICKLEBALL -> Color(0xFF006064)
+    Sport.RACQUETBALL -> Color(0xFFB71C1C)
+    Sport.PADEL -> Color(0xFF2E7D32)
+}
+
+private fun sportAccent(sportName: String): Color = when (Sport.fromName(sportName)) {
+    Sport.SQUASH -> Color(0xFF4CAF50)
+    Sport.BADMINTON -> Color(0xFF64B5F6)
+    Sport.TENNIS -> Color(0xFFFFB300)
+    Sport.TABLE_TENNIS -> Color(0xFFAB47BC)
+    Sport.PICKLEBALL -> Color(0xFF26C6DA)
+    Sport.RACQUETBALL -> Color(0xFFEF5350)
+    Sport.PADEL -> Color(0xFF66BB6A)
+}
+
+// ── Three player screen ──
 
 /**
  * 3-player cut-throat screen.
@@ -37,6 +62,7 @@ fun ThreePlayerScreen(
         SelfScoreScreen(
             score = match.players[0].score,
             name = match.players[0].name,
+            sportName = match.sportName,
             hasUndo = match.pointHistory.isNotEmpty(),
             voiceEnabled = voiceEnabled,
             onVoiceEnabledChanged = onVoiceEnabledChanged,
@@ -62,6 +88,7 @@ fun ThreePlayerScreen(
 private fun SelfScoreScreen(
     score: Int,
     name: String,
+    sportName: String,
     hasUndo: Boolean,
     voiceEnabled: Boolean,
     onVoiceEnabledChanged: (Boolean) -> Unit,
@@ -74,7 +101,7 @@ private fun SelfScoreScreen(
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .background(Color(0xFF1B5E20).copy(alpha = 0.6f))
+                .background(sportServerBg(sportName).copy(alpha = 0.6f))
                 .clickable { onScore() },
             contentAlignment = Alignment.Center
         ) {
@@ -152,8 +179,8 @@ private fun CutThroatScreen(
     onUndo: () -> Unit,
     onEndGame: () -> Unit
 ) {
-    val server = match.server
-    val receiver = match.receiver
+    val server = match.server ?: return
+    val receiver = match.receiver ?: return
     val waiting = match.waitingPlayer
 
     Box(modifier = Modifier.fillMaxSize()) {
@@ -183,13 +210,13 @@ private fun CutThroatScreen(
                 Box(
                     modifier = Modifier.weight(1f).fillMaxHeight()
                         .clip(RoundedCornerShape(12.dp))
-                        .background(Color(0xFF1B5E20).copy(alpha = 0.6f))
+                        .background(sportServerBg(match.sportName).copy(alpha = 0.6f))
                         .clickable { onScore(match.serverIndex) },
                     contentAlignment = Alignment.Center
                 ) {
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
                         Text("SERVE", style = MaterialTheme.typography.caption3,
-                            color = Color(0xFF4CAF50))
+                            color = sportAccent(match.sportName))
                         Text(server.name, style = MaterialTheme.typography.caption1,
                             color = Color.White)
                         Text("+1", style = MaterialTheme.typography.title2,
@@ -206,7 +233,7 @@ private fun CutThroatScreen(
                 ) {
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
                         Text("RECEIVE", style = MaterialTheme.typography.caption3,
-                            color = Color(0xFFFF9800))
+                            color = sportAccent(match.sportName).copy(alpha = 0.6f))
                         Text(receiver.name, style = MaterialTheme.typography.caption1,
                             color = Color.White)
                         Text("+1", style = MaterialTheme.typography.title2,

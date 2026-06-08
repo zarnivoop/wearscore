@@ -12,11 +12,10 @@ import java.util.Date
 import java.util.Locale
 
 /**
- * Phone home screen widget showing latest squash match results.
+ * Phone home screen widget showing latest match results.
  * Updated automatically when the watch sends match data.
- * 2x2 cells on the home screen.
  */
-class SquashScoreWidget : AppWidgetProvider() {
+class TallyWidget : AppWidgetProvider() {
 
     override fun onUpdate(
         context: Context,
@@ -31,7 +30,7 @@ class SquashScoreWidget : AppWidgetProvider() {
 
     companion object {
         fun updateAllWidgets(context: Context) {
-            val widgetName = ComponentName(context, SquashScoreWidget::class.java)
+            val widgetName = ComponentName(context, TallyWidget::class.java)
             val manager = AppWidgetManager.getInstance(context)
             val ids = manager.getAppWidgetIds(widgetName)
             for (id in ids) {
@@ -56,7 +55,6 @@ class SquashScoreWidget : AppWidgetProvider() {
                 views.setTextViewText(R.id.widget_winner, "$winner wins $gamesWon-$gamesLost")
                 views.setTextViewText(R.id.widget_time, timeStr)
 
-                // Health stats
                 if (avgHr > 0 && calories > 0) {
                     views.setTextViewText(R.id.widget_health, "♥ ${avgHr.toInt()} bpm  |  ${calories.toInt()} kcal")
                 } else if (avgHr > 0) {
@@ -67,12 +65,11 @@ class SquashScoreWidget : AppWidgetProvider() {
                     views.setTextViewText(R.id.widget_health, "")
                 }
             } else {
-                views.setTextViewText(R.id.widget_winner, "SquashScore")
+                views.setTextViewText(R.id.widget_winner, "Tally")
                 views.setTextViewText(R.id.widget_time, "Start a match")
                 views.setTextViewText(R.id.widget_health, "on your watch")
             }
 
-            // Tap to open companion app (or squash related content)
             val intent = context.packageManager.getLaunchIntentForPackage(context.packageName)
             if (intent != null) {
                 views.setOnClickPendingIntent(

@@ -12,7 +12,7 @@
         android:id="@+id/widget_winner"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="SquashScore"
+        android:text="Tally"
         android:textSize="14sp"
         android:textColor="#1B5E20"
         android:textStyle="bold"

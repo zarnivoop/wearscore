@@ -57,35 +57,32 @@ fun SetupScreen(
     var indefinite by remember { mutableStateOf(true) }
 
     if (showSettings) {
-        SettingsScreen(
-            currentSport = currentSport,
-            onSportChanged = { s ->
-                onSportChanged(s)
-                showSettings = false
-            },
-            playerCount = playerCount,
-            onPlayerCountChange = { playerCount = it },
-            playerA = playerA,
-            onPlayerAChange = { playerA = it },
-            playerB = playerB,
-            onPlayerBChange = { playerB = it },
-            playerC = playerC,
-            onPlayerCChange = { playerC = it },
-            selfScoreOnly = selfScoreOnly,
-            onSelfScoreOnlyChange = { selfScoreOnly = it },
-            indefinite = indefinite,
-            onIndefiniteChange = { indefinite = it },
-            voiceEnabled = voiceEnabled,
-            onVoiceEnabledChanged = onVoiceEnabledChanged,
-            onStart = { p1, p2, p3, selfOnly, indf ->
-                if (playerCount == 3) {
-                    onStartThreePlayer(p1, p2, p3, selfOnly, indf, selfOnly, currentSport.name)
-                } else {
-                    onStartTwoPlayer(p1, p2, indf, false, currentSport.name)
-                }
-            },
-            onBack = { showSettings = false }
-        )
+    SettingsScreen(
+        currentSport = currentSport,
+        onSportChanged = { onSportChanged(it) },
+        playerCount = playerCount,
+        onPlayerCountChange = { playerCount = it },
+        playerA = playerA,
+        onPlayerAChange = { playerA = it },
+        playerB = playerB,
+        onPlayerBChange = { playerB = it },
+        playerC = playerC,
+        onPlayerCChange = { playerC = it },
+        selfScoreOnly = selfScoreOnly,
+        onSelfScoreOnlyChange = { selfScoreOnly = it },
+        indefinite = indefinite,
+        onIndefiniteChange = { indefinite = it },
+        voiceEnabled = voiceEnabled,
+        onVoiceEnabledChanged = onVoiceEnabledChanged,
+        onStart = { p1, p2, p3, selfOnly, indf ->
+            if (playerCount == 3) {
+                onStartThreePlayer(p1, p2, p3, selfOnly, indf, selfOnly, currentSport.name)
+            } else {
+                onStartTwoPlayer(p1, p2, indf, false, currentSport.name)
+            }
+        },
+        onBack = { showSettings = false }
+    )
     } else if (showSportPicker) {
         SportPickerScreen(
             current = currentSport,
@@ -253,6 +250,20 @@ private fun SettingsScreen(
     onStart: (String, String, String, Boolean, Boolean) -> Unit,
     onBack: () -> Unit
 ) {
+    var showSportPicker by remember { mutableStateOf(false) }
+
+    if (showSportPicker) {
+        SportPickerScreen(
+            current = currentSport,
+            onSelect = { s ->
+                onSportChanged(s)
+                showSportPicker = false
+            },
+            onBack = { showSportPicker = false }
+        )
+        return
+    }
+
     ScalingLazyColumn(
         modifier = Modifier.fillMaxSize(),
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -262,10 +273,10 @@ private fun SettingsScreen(
             Text("Settings", style = MaterialTheme.typography.title3)
         }
 
-        // Sport
+        // Sport — tap to open picker
         item {
             Chip(
-                onClick = { onSportChanged(Sport.fromIndex((currentSport.ordinal + 1) % Sport.entries.size)) },
+                onClick = { showSportPicker = true },
                 label = { Text(currentSport.displayName) },
                 colors = ChipDefaults.primaryChipColors()
             )

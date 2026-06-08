@@ -103,17 +103,18 @@ class MatchViewModel(application: Application) : AndroidViewModel(application) {
         val updated = current.awardPoint(playerIndex) ?: return
 
         val newScorerScore = current.players[playerIndex].score + 1
-        val opponentScore = current.players[1 - playerIndex].score
+        val isThreePlayer = current.isThreePlayer
+        val opponentScore = if (!isThreePlayer) current.players[1 - playerIndex].score else 0
 
         when (updated.state) {
             GameState.FINISHED -> {
-                if (_uiState.value.voiceEnabled) {
+                if (_uiState.value.voiceEnabled && !isThreePlayer) {
                     tts.speak("${newScorerScore}-${opponentScore}.")
                 }
                 finishMatch(updated)
             }
             GameState.BETWEEN_GAMES -> {
-                if (_uiState.value.voiceEnabled) {
+                if (_uiState.value.voiceEnabled && !isThreePlayer) {
                     tts.speak("${newScorerScore}-${opponentScore}.")
                 }
                 val gameWinner = updated.completedGames.last()
@@ -129,11 +130,11 @@ class MatchViewModel(application: Application) : AndroidViewModel(application) {
             else -> {
                 _uiState.update { it.copy(match = updated) }
                 if (_uiState.value.voiceEnabled) {
-                    if (updated.serverIndex != current.serverIndex) {
-                        // Server changed — announce with name: "X serving. X-Y."
-                        tts.speak("${updated.server.name} serving. ${updated.server.score}-${updated.receiver.score}.")
-                    } else {
-                        // Server stays — score only: "X-Y."
+                    if (!isThreePlayer && updated.serverIndex != current.serverIndex) {
+                        val srv = updated.server!!
+                        val rcv = updated.receiver!!
+                        tts.speak("${srv.name} serving. ${srv.score}-${rcv.score}.")
+                    } else if (!isThreePlayer) {
                         tts.speak("${newScorerScore}-${opponentScore}.")
                     }
                 }

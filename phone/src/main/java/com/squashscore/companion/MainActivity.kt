@@ -19,7 +19,7 @@ class MainActivity : Activity() {
                 val prefs = getSharedPreferences(DataReceiverService.PREFS_NAME, MODE_PRIVATE)
                 val winner = prefs.getString("lastWinner", null)
                 if (winner != null) {
-                    appendLine("SquashScore")
+                    appendLine("Tally")
                     appendLine()
                     appendLine("Last match: $winner wins")
                     appendLine("${prefs.getInt("lastGamesWon", 0)} - ${prefs.getInt("lastGamesLost", 0)}")
@@ -28,7 +28,7 @@ class MainActivity : Activity() {
                     val cal = prefs.getFloat("lastCalories", -1f)
                     if (cal > 0) appendLine("Calories: ${cal.toInt()} kcal")
                 } else {
-                    appendLine("SquashScore")
+                    appendLine("Tally")
                     appendLine()
                     appendLine("No matches yet.")
                     appendLine("Start a match on your watch!")

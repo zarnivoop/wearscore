@@ -25,9 +25,9 @@ data class Match(
     val completedGames: List<GameResult> = emptyList()
 ) {
     val isThreePlayer get() = players.size == 3
-    val server get() = players[serverIndex]
-    val receiver get() = players[receiverIndex]
-    val waitingPlayer get() = waitingIndex?.let { players[it] }
+    val server get() = players.getOrNull(serverIndex)
+    val receiver get() = players.getOrNull(receiverIndex)
+    val waitingPlayer get() = waitingIndex?.let { players.getOrNull(it) }
     val gamesNeeded get() = if (indefinite) 1 else bestOf / 2 + 1
     val isMatchOver get() = state == GameState.FINISHED
     val winner get() = if (isMatchOver) players.maxByOrNull { it.gamesWon } else null
@@ -168,9 +168,10 @@ data class Match(
             else this
         } else {
             val oldServer = serverIndex
+            val waitIdx = waitingIndex ?: return this
             return copy(
                 serverIndex = receiverIndex,
-                receiverIndex = waitingIndex!!,
+                receiverIndex = waitIdx,
                 waitingIndex = oldServer
             )
         }
