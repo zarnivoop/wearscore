@@ -130,8 +130,8 @@ private fun SelfScoreScreen(
             modifier = Modifier
                 .align(Alignment.BottomCenter)
                 .fillMaxWidth()
-                .background(Color.Black.copy(alpha = 0.6f))
-                .padding(horizontal = 8.dp, vertical = 4.dp)
+                .background(Color.Black.copy(alpha = 0.7f))
+                .padding(horizontal = 12.dp, vertical = 10.dp)
         ) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -140,28 +140,28 @@ private fun SelfScoreScreen(
             ) {
                 Box(
                     modifier = Modifier
-                        .size(32.dp)
+                        .size(36.dp)
                         .clip(CircleShape)
-                        .background(Color.White.copy(alpha = 0.1f))
+                        .background(Color.White.copy(alpha = 0.15f))
                         .clickable { onVoiceEnabledChanged(!voiceEnabled) },
                     contentAlignment = Alignment.Center
                 ) {
                     Icon(
                         if (voiceEnabled) Icons.Filled.VolumeUp else Icons.Filled.VolumeOff,
                         contentDescription = if (voiceEnabled) "Mute" else "Unmute",
-                        modifier = Modifier.size(16.dp),
+                        modifier = Modifier.size(18.dp),
                         tint = if (voiceEnabled) Color(0xFF4CAF50) else Color.White.copy(alpha = 0.5f)
                     )
                 }
 
                 if (hasUndo) {
-                    Button(onClick = onUndo, modifier = Modifier.height(28.dp)) {
-                        Text("Undo", style = MaterialTheme.typography.caption3)
+                    Button(onClick = onUndo, modifier = Modifier.height(36.dp)) {
+                        Text("Undo", style = MaterialTheme.typography.caption2)
                     }
                 }
 
-                Button(onClick = onEndGame, modifier = Modifier.height(28.dp)) {
-                    Text("End", style = MaterialTheme.typography.caption3)
+                Button(onClick = onEndGame, modifier = Modifier.height(36.dp)) {
+                    Text("End", style = MaterialTheme.typography.caption2)
                 }
             }
         }
@@ -257,8 +257,8 @@ private fun CutThroatScreen(
 
         Box(
             modifier = Modifier.align(Alignment.BottomCenter).fillMaxWidth()
-                .background(Color.Black.copy(alpha = 0.6f))
-                .padding(horizontal = 8.dp, vertical = 4.dp)
+                .background(Color.Black.copy(alpha = 0.7f))
+                .padding(horizontal = 12.dp, vertical = 10.dp)
         ) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -266,27 +266,27 @@ private fun CutThroatScreen(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Box(
-                    modifier = Modifier.size(32.dp).clip(CircleShape)
-                        .background(Color.White.copy(alpha = 0.1f))
+                    modifier = Modifier.size(36.dp).clip(CircleShape)
+                        .background(Color.White.copy(alpha = 0.15f))
                         .clickable { onVoiceEnabledChanged(!voiceEnabled) },
                     contentAlignment = Alignment.Center
                 ) {
                     Icon(
                         if (voiceEnabled) Icons.Filled.VolumeUp else Icons.Filled.VolumeOff,
                         contentDescription = if (voiceEnabled) "Mute" else "Unmute",
-                        modifier = Modifier.size(16.dp),
+                        modifier = Modifier.size(18.dp),
                         tint = if (voiceEnabled) Color(0xFF4CAF50) else Color.White.copy(alpha = 0.5f)
                     )
                 }
 
                 if (match.pointHistory.isNotEmpty()) {
-                    Button(onClick = onUndo, modifier = Modifier.height(28.dp)) {
-                        Text("Undo", style = MaterialTheme.typography.caption3)
+                    Button(onClick = onUndo, modifier = Modifier.height(36.dp)) {
+                        Text("Undo", style = MaterialTheme.typography.caption2)
                     }
                 }
 
-                Button(onClick = onEndGame, modifier = Modifier.height(28.dp)) {
-                    Text("End", style = MaterialTheme.typography.caption3)
+                Button(onClick = onEndGame, modifier = Modifier.height(36.dp)) {
+                    Text("End", style = MaterialTheme.typography.caption2)
                 }
             }
         }

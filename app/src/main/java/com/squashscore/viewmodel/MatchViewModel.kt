@@ -104,17 +104,18 @@ class MatchViewModel(application: Application) : AndroidViewModel(application) {
 
         val newScorerScore = current.players[playerIndex].score + 1
         val isThreePlayer = current.isThreePlayer
+        val silent = current.selfScoreOnly  // self-score mode is silent
         val opponentScore = if (!isThreePlayer) current.players[1 - playerIndex].score else 0
 
         when (updated.state) {
             GameState.FINISHED -> {
-                if (_uiState.value.voiceEnabled && !isThreePlayer) {
+                if (_uiState.value.voiceEnabled && !silent) {
                     tts.speak("${newScorerScore}-${opponentScore}.")
                 }
                 finishMatch(updated)
             }
             GameState.BETWEEN_GAMES -> {
-                if (_uiState.value.voiceEnabled && !isThreePlayer) {
+                if (_uiState.value.voiceEnabled && !silent) {
                     tts.speak("${newScorerScore}-${opponentScore}.")
                 }
                 val gameWinner = updated.completedGames.last()
@@ -129,12 +130,12 @@ class MatchViewModel(application: Application) : AndroidViewModel(application) {
             }
             else -> {
                 _uiState.update { it.copy(match = updated) }
-                if (_uiState.value.voiceEnabled) {
+                if (_uiState.value.voiceEnabled && !silent) {
                     if (!isThreePlayer && updated.serverIndex != current.serverIndex) {
                         val srv = updated.server!!
                         val rcv = updated.receiver!!
                         tts.speak("${srv.name} serving. ${srv.score}-${rcv.score}.")
-                    } else if (!isThreePlayer) {
+                    } else {
                         tts.speak("${newScorerScore}-${opponentScore}.")
                     }
                 }

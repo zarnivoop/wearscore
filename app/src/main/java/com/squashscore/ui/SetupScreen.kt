@@ -31,9 +31,7 @@ import androidx.wear.compose.material.ChipDefaults
 import androidx.wear.compose.material.Icon
 import androidx.wear.compose.material.MaterialTheme
 import androidx.wear.compose.material.ScalingLazyColumn
-import androidx.wear.compose.material.Switch
 import androidx.wear.compose.material.Text
-import androidx.wear.compose.material.ToggleChip
 import com.squashscore.model.Sport
 
 @Composable
@@ -298,37 +296,36 @@ private fun SettingsScreen(
         item {
             PlayerNameField(value = playerB, onValueChange = onPlayerBChange, placeholder = "Player 2")
         }
+
+        // Scoring mode (3-player)
         if (playerCount == 3) {
             item {
                 PlayerNameField(value = playerC, onValueChange = onPlayerCChange, placeholder = "Player 3")
             }
             item {
-                ToggleChip(
-                    checked = selfScoreOnly,
-                    onCheckedChange = onSelfScoreOnlyChange,
-                    label = { Text(if (selfScoreOnly) "Count own score" else "Track all") },
-                    toggleControl = { Switch(checked = selfScoreOnly) }
+                Chip(
+                    onClick = { onSelfScoreOnlyChange(!selfScoreOnly) },
+                    label = { Text(if (selfScoreOnly) "My score only" else "All scores") },
+                    colors = ChipDefaults.secondaryChipColors()
                 )
             }
         }
 
-        // Indefinite scoring
+        // Game length
         item {
-            ToggleChip(
-                checked = indefinite,
-                onCheckedChange = onIndefiniteChange,
+            Chip(
+                onClick = { onIndefiniteChange(!indefinite) },
                 label = { Text(if (indefinite) "Indefinite" else "To 11") },
-                toggleControl = { Switch(checked = indefinite) }
+                colors = ChipDefaults.secondaryChipColors()
             )
         }
 
-        // Voice toggle
+        // Voice
         item {
-            ToggleChip(
-                checked = voiceEnabled,
-                onCheckedChange = onVoiceEnabledChanged,
-                label = { Text("Voice") },
-                toggleControl = { Switch(checked = voiceEnabled) }
+            Chip(
+                onClick = { onVoiceEnabledChanged(!voiceEnabled) },
+                label = { Text(if (voiceEnabled) "Voice on" else "Voice muted") },
+                colors = ChipDefaults.secondaryChipColors()
             )
         }
 
