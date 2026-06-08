@@ -10,7 +10,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
-import androidx.compose.material.icons.filled.History
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
@@ -169,7 +168,6 @@ private fun QuickStartScreen(
                 modifier = Modifier.fillMaxWidth(0.9f),
                 colors = ButtonDefaults.secondaryButtonColors()
             ) {
-                Icon(Icons.Default.History, contentDescription = "History")
                 Text("History", style = MaterialTheme.typography.caption1)
             }
         }
