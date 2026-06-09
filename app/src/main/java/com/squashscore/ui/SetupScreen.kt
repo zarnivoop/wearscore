@@ -96,7 +96,7 @@ fun SetupScreen(
             onPlayerCountChange = { playerCount = it },
             onSelectSport = { showSportPicker = true },
             onStart = {
-                val p1 = playerA.ifBlank { "Player 1" }
+                val p1 = playerA.ifBlank { "You" }
                 val p2 = playerB.ifBlank { "Player 2" }
                 if (playerCount == 3) {
                     val p3 = playerC.ifBlank { "Player 3" }
@@ -289,7 +289,7 @@ private fun SettingsScreen(
 
         // Names
         item {
-            PlayerNameField(value = playerA, onValueChange = onPlayerAChange, placeholder = "Player 1")
+            PlayerNameField(value = playerA, onValueChange = onPlayerAChange, placeholder = "You")
         }
         item {
             PlayerNameField(value = playerB, onValueChange = onPlayerBChange, placeholder = "Player 2")
@@ -331,7 +331,7 @@ private fun SettingsScreen(
         item {
             Button(
                 onClick = {
-                    val p1 = playerA.ifBlank { "Player 1" }
+                    val p1 = playerA.ifBlank { "You" }
                     val p2 = playerB.ifBlank { "Player 2" }
                     val p3 = playerC.ifBlank { "Player 3" }
                     onStart(p1, p2, p3, selfScoreOnly, indefinite)
