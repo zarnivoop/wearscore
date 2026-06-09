@@ -18,53 +18,64 @@ fun HistoryScreen(
     onBack: () -> Unit,
     onDelete: (Match) -> Unit
 ) {
-    val formatter = remember { DateTimeFormatter.ofPattern("MMM d").withZone(ZoneId.systemDefault()) }
+    val dateFormatter = remember {
+        DateTimeFormatter.ofPattern("MMM d, HH:mm").withZone(ZoneId.systemDefault())
+    }
 
     ScalingLazyColumn(
         modifier = Modifier.fillMaxSize(),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         item {
-            Button(onClick = onBack) {
-                Text("← Back")
-            }
-        }
-        item {
             Text("History", style = MaterialTheme.typography.title3)
         }
 
         if (matches.isEmpty()) {
             item {
-                Text("No matches yet", style = MaterialTheme.typography.caption1,
-                    color = Color.White.copy(alpha = 0.5f))
+                Text(
+                    "No matches yet",
+                    style = MaterialTheme.typography.caption1,
+                    color = Color.White.copy(alpha = 0.5f)
+                )
             }
         } else {
             val sorted = matches.sortedByDescending { it.createdAt }
             sorted.forEach { match ->
+                val scoreLine = buildScoreLine(match)
+                val winnerName = match.winner?.name ?: "?"
+                val isThreePlayer = match.isThreePlayer
+                val players = if (isThreePlayer) {
+                    match.players.map { it.name }.joinToString(", ")
+                } else {
+                    match.players.map { it.name }.joinToString(" vs ")
+                }
+
                 item {
                     Card(
-                        onClick = {},
+                        onClick = { onDelete(match) },
                         modifier = Modifier.fillMaxWidth(0.9f)
                     ) {
                         Column(modifier = Modifier.padding(8.dp)) {
                             Text(
-                                match.players.map { it.name }.joinToString(" vs "),
+                                dateFormatter.format(match.createdAt),
+                                style = MaterialTheme.typography.caption3,
+                                color = Color.White.copy(alpha = 0.5f)
+                            )
+                            Text(
+                                players,
                                 style = MaterialTheme.typography.caption2,
                                 maxLines = 1
                             )
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.SpaceBetween
-                            ) {
+                            Text(
+                                scoreLine,
+                                style = MaterialTheme.typography.caption1,
+                                color = Color(0xFF4CAF50)
+                            )
+                            if (match.completedGames.isNotEmpty()) {
                                 Text(
-                                    "${match.winner?.name ?: "?"} won",
+                                    "$winnerName won ${match.winner?.gamesWon ?: 0}-${match.completedGames.size - (match.winner?.gamesWon ?: 0)}",
                                     style = MaterialTheme.typography.caption3,
-                                    color = Color(0xFF4CAF50)
-                                )
-                                Text(
-                                    formatter.format(match.createdAt),
-                                    style = MaterialTheme.typography.caption3,
-                                    color = Color.White.copy(alpha = 0.4f)
+                                    color = Color.White.copy(alpha = 0.6f)
                                 )
                             }
                         }
@@ -72,5 +83,25 @@ fun HistoryScreen(
                 }
             }
         }
+
+        item {
+            Button(
+                onClick = onBack,
+                modifier = Modifier.fillMaxWidth(0.85f),
+                colors = ButtonDefaults.secondaryButtonColors()
+            ) {
+                Text("Back")
+            }
+        }
+    }
+}
+
+private fun buildScoreLine(match: Match): String {
+    return if (match.completedGames.isNotEmpty()) {
+        match.completedGames.joinToString(", ") { game ->
+            game.scores.joinToString("-")
+        }
+    } else {
+        match.players.joinToString(" - ") { it.score.toString() }
     }
 }

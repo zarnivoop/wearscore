@@ -15,7 +15,7 @@ class MatchRepository(private val context: Context) {
 
     fun saveMatch(match: Match) {
         val matches = loadMatches().toMutableList().apply { add(match) }
-        if (matches.size > 50) {
+        if (matches.size > 10) {
             matches.removeAt(0)
         }
         prefs.edit().putString("history", json.encodeToString(matches)).apply()
