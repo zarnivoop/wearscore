@@ -7,6 +7,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.VolumeUp
 import androidx.compose.material.icons.filled.VolumeOff
+import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -57,7 +58,6 @@ private fun sportAccent(sportName: String): Color = when (Sport.fromName(sportNa
 @Composable
 fun ScoreScreen(
     match: Match,
-    restSeconds: Int,
     voiceEnabled: Boolean,
     onVoiceEnabledChanged: (Boolean) -> Unit,
     onScore: (playerIndex: Int) -> Unit,
@@ -103,7 +103,7 @@ fun ScoreScreen(
 
     Box(modifier = Modifier.fillMaxSize()) {
         if (isResting) {
-            RestOverlay(seconds = restSeconds, onContinue = onContinue)
+            BetweenGamesOverlay(onNextSet = onContinue, onEndGame = onEndGame)
         }
 
         Column(modifier = Modifier.fillMaxSize()) {
@@ -273,27 +273,45 @@ fun ScoreScreen(
 }
 
 @Composable
-private fun RestOverlay(seconds: Int, onContinue: () -> Unit) {
+private fun BetweenGamesOverlay(
+    onNextSet: () -> Unit,
+    onEndGame: () -> Unit
+) {
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color.Black.copy(alpha = 0.7f)),
+            .background(Color.Black.copy(alpha = 0.80f)),
         contentAlignment = Alignment.Center
     ) {
-        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
             Text(
-                "Rest",
+                "Set won!",
                 style = MaterialTheme.typography.title2,
                 color = Color(0xFFFFA726)
             )
-            Text(
-                "${seconds}s",
-                style = MaterialTheme.typography.display2,
-                color = Color.White
-            )
-            Spacer(modifier = Modifier.height(8.dp))
-            Button(onClick = onContinue) {
-                Text("Continue")
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                Button(
+                    onClick = onNextSet,
+                    colors = ButtonDefaults.primaryButtonColors()
+                ) {
+                    Icon(
+                        Icons.Default.PlayArrow,
+                        contentDescription = null,
+                        modifier = Modifier.size(16.dp)
+                    )
+                    Text("Next set", style = MaterialTheme.typography.caption1)
+                }
+                Button(
+                    onClick = onEndGame,
+                    colors = ButtonDefaults.secondaryButtonColors()
+                ) {
+                    Text("End game", style = MaterialTheme.typography.caption1)
+                }
             }
         }
     }

@@ -72,7 +72,6 @@ class MainActivity : FragmentActivity(), AmbientModeSupport.AmbientCallbackProvi
                     } else {
                         ScoreScreen(
                             match = state.match,
-                            restSeconds = state.restSeconds,
                             voiceEnabled = state.voiceEnabled,
                             onVoiceEnabledChanged = { vm.setVoiceEnabled(it) },
                             onScore = { vm.scorePoint(it) },

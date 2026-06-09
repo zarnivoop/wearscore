@@ -3,18 +3,15 @@ package com.squashscore.viewmodel
 import android.app.Application
 import android.content.Context
 import androidx.lifecycle.AndroidViewModel
-import androidx.lifecycle.viewModelScope
 import com.squashscore.data.MatchRepository
 import com.squashscore.data.WearDataSync
 import com.squashscore.model.GameState
 import com.squashscore.model.Match
 import com.squashscore.tts.TtsManager
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
-import kotlinx.coroutines.launch
 
 class MatchViewModel(application: Application) : AndroidViewModel(application) {
 
@@ -126,7 +123,6 @@ class MatchViewModel(application: Application) : AndroidViewModel(application) {
                     tts.announceGameWon(name, won, lost)
                 }
                 _uiState.update { it.copy(match = updated) }
-                showRestTimer()
             }
             else -> {
                 _uiState.update { it.copy(match = updated) }
@@ -162,16 +158,11 @@ class MatchViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
-    // ── Continue between games (timer is informational only) ──
+    // ── Continue between games ──
 
     fun continueGame() {
-        _uiState.update { it.copy(
-            match = it.match.startMatch(),
-            restSeconds = 0
-        ) }
+        _uiState.update { it.copy(match = it.match.startMatch()) }
     }
-
-    // ── Match end ──
 
     private fun finishMatch(match: Match) {
         if (_uiState.value.voiceEnabled) {
@@ -180,18 +171,6 @@ class MatchViewModel(application: Application) : AndroidViewModel(application) {
         _uiState.update { it.copy(match = match, screen = Screen.SUMMARY) }
         try { saveMatch(match) } catch (_: Exception) {}
         try { wearSync.syncMatch(match) } catch (_: Exception) {}
-    }
-
-    // ── Informational timer ──
-
-    private fun showRestTimer() {
-        viewModelScope.launch {
-            for (s in 90 downTo 0) {
-                if (_uiState.value.match.state != GameState.BETWEEN_GAMES) return@launch
-                _uiState.update { it.copy(restSeconds = s) }
-                delay(1000)
-            }
-        }
     }
 
     // ── Navigation ──
