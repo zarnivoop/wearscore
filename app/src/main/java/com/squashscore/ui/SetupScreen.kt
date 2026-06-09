@@ -311,11 +311,20 @@ private fun SettingsScreen(
 
         // Game length
         item {
-            Chip(
-                onClick = { onIndefiniteChange(!indefinite) },
-                label = { Text(if (indefinite) "Indefinite" else "To 11") },
-                colors = ChipDefaults.secondaryChipColors()
-            )
+            if (currentSport.usesStandardScoring) {
+                Chip(
+                    onClick = { onIndefiniteChange(!indefinite) },
+                    label = { Text(if (indefinite) "Indefinite" else "To ${currentSport.defaultTarget}") },
+                    colors = ChipDefaults.secondaryChipColors()
+                )
+            } else {
+                Chip(
+                    onClick = { },
+                    label = { Text("Standard scoring") },
+                    colors = ChipDefaults.secondaryChipColors(),
+                    enabled = false
+                )
+            }
         }
 
         // Voice

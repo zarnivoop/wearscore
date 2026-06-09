@@ -36,39 +36,50 @@ data class Match(
 
     fun setupTwoPlayer(
         playerA: String, playerB: String,
-        pointsToWin: Int = 11, bestOf: Int = 5,
+        pointsToWin: Int = -1,
+        bestOf: Int = 5,
         indefinite: Boolean = false,
         simpleMode: Boolean = false,
         sportName: String = Sport.SQUASH.name
-    ): Match = copy(
+    ): Match {
+        val sport = Sport.fromName(sportName)
+        val effectiveTarget = if (pointsToWin > 0) pointsToWin else sport.defaultTarget
+        val effectiveIndefinite = indefinite || !sport.usesStandardScoring
+        return copy(
         players = listOf(Player(name = playerA), Player(name = playerB)),
-        pointsToWin = pointsToWin,
+        pointsToWin = effectiveTarget,
         bestOf = bestOf,
-        indefinite = indefinite,
+        indefinite = effectiveIndefinite,
         simpleMode = simpleMode,
         sportName = sportName,
         state = GameState.WARMUP,
         serverIndex = 0, receiverIndex = 1, waitingIndex = null
     )
+    }
 
     fun setupThreePlayer(
         playerA: String, playerB: String, playerC: String,
-        pointsToWin: Int = 11,
+        pointsToWin: Int = -1,
         indefinite: Boolean = false,
         selfScoreOnly: Boolean = false,
         simpleMode: Boolean = false,
         sportName: String = Sport.SQUASH.name
-    ): Match = copy(
+    ): Match {
+        val sport = Sport.fromName(sportName)
+        val effectiveTarget = if (pointsToWin > 0) pointsToWin else sport.defaultTarget
+        val effectiveIndefinite = indefinite || !sport.usesStandardScoring
+        return copy(
         players = listOf(Player(name = playerA), Player(name = playerB), Player(name = playerC)),
-        pointsToWin = pointsToWin,
+        pointsToWin = effectiveTarget,
         bestOf = 1,
-        indefinite = indefinite,
+        indefinite = effectiveIndefinite,
         selfScoreOnly = selfScoreOnly,
         simpleMode = simpleMode,
         sportName = sportName,
         state = GameState.WARMUP,
         serverIndex = 0, receiverIndex = 1, waitingIndex = 2
     )
+    }
 
     fun startMatch(): Match = copy(state = GameState.PLAYING)
 
