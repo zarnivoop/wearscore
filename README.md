@@ -1,8 +1,8 @@
 # Tally
 
-A score tracker for Wear OS. I built this because I am notoriously bad at keeping score when playing squash -- I lose count around 7-4 and then we spend 30 seconds reconstructing the rally. Tally fixes that.
+A score tracker for Wear OS. I built this because I am hilariously bad at keeping score when playing squash.
 
-Works on any Wear OS 3+ watch (Galaxy Watch, Pixel Watch, etc.). No account, no internet, no phone required during play.
+Works on any Wear OS 3+ watch (Galaxy Watch, Pixel Watch, etc.). No phone required.
 
 ## Sports
 
@@ -21,7 +21,6 @@ Squash, badminton, tennis, table tennis, pickleball, racquetball, padel.
 - Undo last point
 - Ambient mode support -- stays visible when the screen dims
 - Match history stored locally on the watch
-- Companion phone app with a home screen widget (scores synced via Wear Data Layer)
 
 ## Tech
 
@@ -37,9 +36,8 @@ app/src/main/java/com/squashscore/
   model/          Player, GameState, Sport, Match
   viewmodel/      MatchViewModel (state + actions + TTS)
   tts/            TtsManager (Android TTS wrapper)
-  data/           MatchRepository (JSON persistence), WearDataSync
+  data/           MatchRepository (JSON persistence)
   ui/             Screens: Setup, Score, ThreePlayer, Summary, History
-phone/            Companion app with widget
 ```
 
 ## Build
