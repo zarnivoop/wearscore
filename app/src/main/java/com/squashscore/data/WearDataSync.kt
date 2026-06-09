@@ -43,6 +43,6 @@ class WearDataSync(private val context: Context) {
 
     companion object {
         private const val TAG = "WearDataSync"
-        private const val MATCH_PATH = "/tally/match-result"
+        private const val MATCH_PATH = "/wearscore/match-result"
     }
 }

@@ -59,7 +59,7 @@ class DataReceiverService : WearableListenerService() {
     }
 
     private fun updateWidget() {
-        val widgetName = ComponentName(this, TallyWidget::class.java)
+        val widgetName = ComponentName(this, WearScoreWidget::class.java)
         val manager = AppWidgetManager.getInstance(this)
         manager.notifyAppWidgetViewDataChanged(
             manager.getAppWidgetIds(widgetName),
@@ -69,7 +69,7 @@ class DataReceiverService : WearableListenerService() {
 
     companion object {
         private const val TAG = "DataReceiver"
-        private const val MATCH_PATH = "/tally/match-result"
-        const val PREFS_NAME = "tally_widget"
+        private const val MATCH_PATH = "/wearscore/match-result"
+        const val PREFS_NAME = "wearscore_widget"
     }
 }

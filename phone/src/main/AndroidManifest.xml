@@ -5,7 +5,7 @@
 
     <application
         android:allowBackup="true"
-        android:label="Tally"
+        android:label="WearScore"
         android:supportsRtl="true"
         android:theme="@android:style/Theme.Material.Light">
 
@@ -28,14 +28,14 @@
                 <action android:name="com.google.android.gms.wearable.MESSAGE_RECEIVED" />
                 <data
                     android:host="*"
-                    android:pathPrefix="/tally/"
+                    android:pathPrefix="/wearscore/"
                     android:scheme="wear" />
             </intent-filter>
         </service>
 
         <!-- AppWidget: live tile on the phone home screen -->
         <receiver
-            android:name=".TallyWidget"
+            android:name=".WearScoreWidget"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />

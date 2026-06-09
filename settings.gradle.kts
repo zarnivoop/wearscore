@@ -13,6 +13,6 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "Tally"
+rootProject.name = "WearScore"
 include(":app")
 include(":phone")

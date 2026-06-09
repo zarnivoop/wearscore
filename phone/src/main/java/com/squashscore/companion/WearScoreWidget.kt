@@ -15,7 +15,7 @@ import java.util.Locale
  * Phone home screen widget showing latest match results.
  * Updated automatically when the watch sends match data.
  */
-class TallyWidget : AppWidgetProvider() {
+class WearScoreWidget : AppWidgetProvider() {
 
     override fun onUpdate(
         context: Context,
@@ -30,7 +30,7 @@ class TallyWidget : AppWidgetProvider() {
 
     companion object {
         fun updateAllWidgets(context: Context) {
-            val widgetName = ComponentName(context, TallyWidget::class.java)
+            val widgetName = ComponentName(context, WearScoreWidget::class.java)
             val manager = AppWidgetManager.getInstance(context)
             val ids = manager.getAppWidgetIds(widgetName)
             for (id in ids) {
@@ -56,16 +56,16 @@ class TallyWidget : AppWidgetProvider() {
                 views.setTextViewText(R.id.widget_time, timeStr)
 
                 if (avgHr > 0 && calories > 0) {
-                    views.setTextViewText(R.id.widget_health, "♥ ${avgHr.toInt()} bpm  |  ${calories.toInt()} kcal")
+                    views.setTextViewText(R.id.widget_health, "${avgHr.toInt()} bpm  |  ${calories.toInt()} kcal")
                 } else if (avgHr > 0) {
-                    views.setTextViewText(R.id.widget_health, "♥ ${avgHr.toInt()} bpm")
+                    views.setTextViewText(R.id.widget_health, "${avgHr.toInt()} bpm")
                 } else if (calories > 0) {
                     views.setTextViewText(R.id.widget_health, "${calories.toInt()} kcal")
                 } else {
                     views.setTextViewText(R.id.widget_health, "")
                 }
             } else {
-                views.setTextViewText(R.id.widget_winner, "Tally")
+                views.setTextViewText(R.id.widget_winner, "WearScore")
                 views.setTextViewText(R.id.widget_time, "Start a match")
                 views.setTextViewText(R.id.widget_health, "on your watch")
             }

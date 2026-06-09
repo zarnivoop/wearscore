@@ -1,4 +1,4 @@
-# Tally
+# WearScore
 
 A score tracker for Wear OS. I built this because I am hilariously bad at keeping score when playing squash.
 
@@ -6,7 +6,17 @@ Works on any Wear OS 3+ watch (Galaxy Watch, Pixel Watch, etc.). No phone requir
 
 ## Sports
 
-Squash, badminton, tennis, table tennis, pickleball, racquetball, padel.
+Each sport defaults to its standard rally-point target. Tennis and padel use 15-30-40 scoring and are always indefinite.
+
+| Sport | Target |
+|---|---|
+| Squash | 11 |
+| Badminton | 21 |
+| Table Tennis | 11 |
+| Pickleball | 11 |
+| Racquetball | 15 |
+| Tennis | -- (standard) |
+| Padel | -- (standard) |
 
 ## Modes
 
@@ -16,11 +26,11 @@ Squash, badminton, tennis, table tennis, pickleball, racquetball, padel.
 
 ## Features
 
-- To 11 or indefinite play
-- Optional voice announcements using on-device TTS
+- Per-sport scoring targets with optional indefinite mode
+- Voice announcements using on-device TTS (toggleable during play)
 - Undo last point
 - Ambient mode support -- stays visible when the screen dims
-- Match history stored locally on the watch
+- Match history stored locally on the watch (last 10 matches)
 
 ## Tech
 
