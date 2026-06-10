@@ -50,6 +50,8 @@ class MainActivity : FragmentActivity(), AmbientModeSupport.AmbientCallbackProvi
                         onShowHistory = { vm.showHistory() },
                         voiceEnabled = state.voiceEnabled,
                         onVoiceEnabledChanged = { vm.setVoiceEnabled(it) },
+                        gestureScoring = state.gestureScoring,
+                        onGestureScoringChanged = { vm.setGestureScoring(it) },
                         savedPlayer1Name = vm.loadPlayer1Name(),
                         currentSport = currentSport,
                         onSportChanged = { s ->

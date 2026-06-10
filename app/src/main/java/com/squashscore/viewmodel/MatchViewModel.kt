@@ -2,9 +2,11 @@ package com.squashscore.viewmodel
 
 import android.app.Application
 import android.content.Context
+import android.hardware.SensorManager
 import androidx.lifecycle.AndroidViewModel
 import com.squashscore.data.MatchRepository
 import com.squashscore.data.WearDataSync
+import com.squashscore.gesture.GestureScorer
 import com.squashscore.model.GameState
 import com.squashscore.model.Match
 import com.squashscore.tts.TtsManager
@@ -18,6 +20,9 @@ class MatchViewModel(application: Application) : AndroidViewModel(application) {
     private val repo = MatchRepository(application)
     val tts = TtsManager(application)
     private val wearSync = WearDataSync(application)
+    private val gestureScorer = GestureScorer(
+        application.getSystemService(Context.SENSOR_SERVICE) as SensorManager
+    )
 
     private val _uiState = MutableStateFlow(UiState())
     val uiState: StateFlow<UiState> = _uiState.asStateFlow()
@@ -27,7 +32,8 @@ class MatchViewModel(application: Application) : AndroidViewModel(application) {
         val history: List<Match> = emptyList(),
         val screen: Screen = Screen.SETUP,
         val restSeconds: Int = 0,
-        val voiceEnabled: Boolean = true
+        val voiceEnabled: Boolean = true,
+        val gestureScoring: Boolean = false
     )
 
     enum class Screen { SETUP, PLAYING, SUMMARY, HISTORY }
@@ -85,12 +91,29 @@ class MatchViewModel(application: Application) : AndroidViewModel(application) {
         tts.enabled = enabled
     }
 
+    fun setGestureScoring(enabled: Boolean) {
+        _uiState.update { it.copy(gestureScoring = enabled) }
+        if (enabled && _uiState.value.screen == Screen.PLAYING) {
+            startGestureScoring()
+        } else {
+            gestureScorer.stop()
+        }
+    }
+
     private fun startMatch() {
         _uiState.update { it.copy(
             match = it.match.startMatch(),
             screen = Screen.PLAYING,
             restSeconds = 0
         ) }
+        if (_uiState.value.gestureScoring) {
+            startGestureScoring()
+        }
+    }
+
+    private fun startGestureScoring() {
+        if (!gestureScorer.isAvailable) return
+        gestureScorer.start { scorePoint(0) }
     }
 
     // ── Scoring ──
@@ -147,6 +170,7 @@ class MatchViewModel(application: Application) : AndroidViewModel(application) {
     // ── End game at any time ──
 
     fun endGame() {
+        gestureScorer.stop()
         try {
             val ended = _uiState.value.match.endManually()
             _uiState.update { it.copy(match = ended, screen = Screen.SUMMARY) }
@@ -165,6 +189,7 @@ class MatchViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     private fun finishMatch(match: Match) {
+        gestureScorer.stop()
         if (_uiState.value.voiceEnabled) {
             tts.announceMatchWon(match.winner?.name ?: "")
         }
@@ -176,7 +201,8 @@ class MatchViewModel(application: Application) : AndroidViewModel(application) {
     // ── Navigation ──
 
     fun newMatch() {
-        _uiState.update { UiState(voiceEnabled = _uiState.value.voiceEnabled) }
+        gestureScorer.stop()
+        _uiState.update { UiState(voiceEnabled = _uiState.value.voiceEnabled, gestureScoring = _uiState.value.gestureScoring) }
     }
 
     fun showHistory() {
@@ -203,6 +229,7 @@ class MatchViewModel(application: Application) : AndroidViewModel(application) {
 
     override fun onCleared() {
         super.onCleared()
+        gestureScorer.stop()
         tts.shutdown()
     }
 }

@@ -40,6 +40,8 @@ fun SetupScreen(
     onShowHistory: () -> Unit,
     voiceEnabled: Boolean,
     onVoiceEnabledChanged: (Boolean) -> Unit,
+    gestureScoring: Boolean = false,
+    onGestureScoringChanged: (Boolean) -> Unit = {},
     savedPlayer1Name: String = "",
     currentSport: Sport = Sport.SQUASH,
     onSportChanged: (Sport) -> Unit
@@ -52,6 +54,7 @@ fun SetupScreen(
     var playerC by remember { mutableStateOf("") }
     var selfScoreOnly by remember { mutableStateOf(true) }
     var indefinite by remember { mutableStateOf(true) }
+    var gestureScoring by remember { mutableStateOf(false) }
 
     if (showSettings) {
     SettingsScreen(
@@ -71,6 +74,8 @@ fun SetupScreen(
         onIndefiniteChange = { indefinite = it },
         voiceEnabled = voiceEnabled,
         onVoiceEnabledChanged = onVoiceEnabledChanged,
+        gestureScoring = gestureScoring,
+        onGestureScoringChanged = { gestureScoring = it },
         onStart = { p1, p2, p3, selfOnly, indf ->
             if (playerCount == 3) {
                 onStartThreePlayer(p1, p2, p3, selfOnly, indf, selfOnly, currentSport.name)
@@ -243,6 +248,8 @@ private fun SettingsScreen(
     onIndefiniteChange: (Boolean) -> Unit,
     voiceEnabled: Boolean,
     onVoiceEnabledChanged: (Boolean) -> Unit,
+    gestureScoring: Boolean,
+    onGestureScoringChanged: (Boolean) -> Unit,
     onStart: (String, String, String, Boolean, Boolean) -> Unit,
     onBack: () -> Unit
 ) {
@@ -332,6 +339,15 @@ private fun SettingsScreen(
             Chip(
                 onClick = { onVoiceEnabledChanged(!voiceEnabled) },
                 label = { Text(if (voiceEnabled) "Voice on" else "Voice muted") },
+                colors = ChipDefaults.secondaryChipColors()
+            )
+        }
+
+        // Gesture scoring
+        item {
+            Chip(
+                onClick = { onGestureScoringChanged(!gestureScoring) },
+                label = { Text(if (gestureScoring) "Twist to score" else "Gesture off") },
                 colors = ChipDefaults.secondaryChipColors()
             )
         }
