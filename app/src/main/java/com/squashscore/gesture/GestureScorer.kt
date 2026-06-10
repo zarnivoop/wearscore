@@ -4,18 +4,25 @@ import android.hardware.Sensor
 import android.hardware.SensorEvent
 import android.hardware.SensorEventListener
 import android.hardware.SensorManager
+import android.os.VibrationEffect
+import android.os.Vibrator
 import kotlin.math.abs
 
 /**
  * Detects a wrist-twist gesture using the gyroscope and fires a callback.
  *
- * Gesture: rapid rotation around the Z-axis (perpendicular to the watch
- * face) followed by a return below threshold. Think "turning a doorknob".
+ * Gesture: quickly rotate your wrist like turning a doorknob
+ * (palm up → palm down, or reverse). The watch-face axis (Z)
+ * rotates rapidly, then returns to rest.
  *
- * Debounced to prevent double-fires (1.5 s cooldown between detections).
+ * Vibrates briefly on each detection so you feel the point register.
+ * Debounced to prevent double-fires (1.5 s cooldown).
  * Only active during a match — start/stop controls sensor registration.
  */
-class GestureScorer(private val sensorManager: SensorManager) {
+class GestureScorer(
+    private val sensorManager: SensorManager,
+    private val vibrator: Vibrator?
+) {
 
     private val gyroSensor: Sensor? =
         sensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE)
@@ -26,8 +33,8 @@ class GestureScorer(private val sensorManager: SensorManager) {
     private var lastFireMs = 0L
 
     private val debounceMs = 1500L
-    private val thresholdRadPerSec = 2.5f   // ~143 deg/s — fast but not violent
-    private val releaseThreshold = 1.0f     // must drop below this to register
+    private val thresholdRadPerSec = 1.5f   // ~86 deg/s — deliberate but not violent
+    private val releaseThreshold = 0.6f     // must drop below this to register
 
     private val listener = object : SensorEventListener {
         override fun onSensorChanged(event: SensorEvent) {
@@ -44,6 +51,7 @@ class GestureScorer(private val sensorManager: SensorManager) {
                 val now = System.currentTimeMillis()
                 if (now - lastFireMs > debounceMs) {
                     lastFireMs = now
+                    vibrator?.vibrate(VibrationEffect.createOneShot(40, VibrationEffect.DEFAULT_AMPLITUDE))
                     onScore?.invoke()
                 }
                 twistActive = false

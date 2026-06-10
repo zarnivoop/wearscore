@@ -3,6 +3,8 @@ package com.squashscore.viewmodel
 import android.app.Application
 import android.content.Context
 import android.hardware.SensorManager
+import android.os.PowerManager
+import android.os.Vibrator
 import androidx.lifecycle.AndroidViewModel
 import com.squashscore.data.MatchRepository
 import com.squashscore.data.WearDataSync
@@ -21,8 +23,14 @@ class MatchViewModel(application: Application) : AndroidViewModel(application) {
     val tts = TtsManager(application)
     private val wearSync = WearDataSync(application)
     private val gestureScorer = GestureScorer(
-        application.getSystemService(Context.SENSOR_SERVICE) as SensorManager
+        application.getSystemService(Context.SENSOR_SERVICE) as SensorManager,
+        application.getSystemService(Context.VIBRATOR_SERVICE) as Vibrator?
     )
+
+    private val wakeLock: PowerManager.WakeLock by lazy {
+        val pm = application.getSystemService(Context.POWER_SERVICE) as PowerManager
+        pm.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "wearscore:match")
+    }
 
     private val _uiState = MutableStateFlow(UiState())
     val uiState: StateFlow<UiState> = _uiState.asStateFlow()
@@ -109,6 +117,9 @@ class MatchViewModel(application: Application) : AndroidViewModel(application) {
         if (_uiState.value.gestureScoring) {
             startGestureScoring()
         }
+        if (!wakeLock.isHeld) {
+            wakeLock.acquire(10 * 60 * 1000L) // 10-minute timeout as safety net
+        }
     }
 
     private fun startGestureScoring() {
@@ -171,6 +182,7 @@ class MatchViewModel(application: Application) : AndroidViewModel(application) {
 
     fun endGame() {
         gestureScorer.stop()
+        releaseWakeLock()
         try {
             val ended = _uiState.value.match.endManually()
             _uiState.update { it.copy(match = ended, screen = Screen.SUMMARY) }
@@ -190,6 +202,7 @@ class MatchViewModel(application: Application) : AndroidViewModel(application) {
 
     private fun finishMatch(match: Match) {
         gestureScorer.stop()
+        releaseWakeLock()
         if (_uiState.value.voiceEnabled) {
             tts.announceMatchWon(match.winner?.name ?: "")
         }
@@ -202,6 +215,7 @@ class MatchViewModel(application: Application) : AndroidViewModel(application) {
 
     fun newMatch() {
         gestureScorer.stop()
+        releaseWakeLock()
         _uiState.update { UiState(voiceEnabled = _uiState.value.voiceEnabled, gestureScoring = _uiState.value.gestureScoring) }
     }
 
@@ -230,6 +244,13 @@ class MatchViewModel(application: Application) : AndroidViewModel(application) {
     override fun onCleared() {
         super.onCleared()
         gestureScorer.stop()
+        releaseWakeLock()
         tts.shutdown()
+    }
+
+    private fun releaseWakeLock() {
+        if (wakeLock.isHeld) {
+            wakeLock.release()
+        }
     }
 }
