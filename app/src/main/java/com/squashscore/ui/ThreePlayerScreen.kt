@@ -6,43 +6,17 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.VolumeUp
-import androidx.compose.material.icons.filled.VolumeOff
+import androidx.compose.material.icons.automirrored.filled.VolumeUp
+import androidx.compose.material.icons.automirrored.filled.VolumeOff
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.wear.compose.material.*
 import com.squashscore.model.Match
-import com.squashscore.model.Sport
-
-// ── Sport color helpers (local copies — keep in sync with ScoreScreen.kt) ──
-
-private fun sportServerBg(sportName: String): Color = when (Sport.fromName(sportName)) {
-    Sport.SQUASH -> Color(0xFF1B5E20)
-    Sport.BADMINTON -> Color(0xFF0D47A1)
-    Sport.TENNIS -> Color(0xFF795548)
-    Sport.TABLE_TENNIS -> Color(0xFF4A148C)
-    Sport.PICKLEBALL -> Color(0xFF006064)
-    Sport.RACQUETBALL -> Color(0xFFB71C1C)
-    Sport.PADEL -> Color(0xFF2E7D32)
-}
-
-private fun sportAccent(sportName: String): Color = when (Sport.fromName(sportName)) {
-    Sport.SQUASH -> Color(0xFF4CAF50)
-    Sport.BADMINTON -> Color(0xFF64B5F6)
-    Sport.TENNIS -> Color(0xFFFFB300)
-    Sport.TABLE_TENNIS -> Color(0xFFAB47BC)
-    Sport.PICKLEBALL -> Color(0xFF26C6DA)
-    Sport.RACQUETBALL -> Color(0xFFEF5350)
-    Sport.PADEL -> Color(0xFF66BB6A)
-}
-
-// ── Three player screen ──
 
 /**
  * 3-player cut-throat screen.
@@ -126,7 +100,7 @@ private fun SelfScoreScreen(
         ) {
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
                 Text(
-                    name,
+                    name.ifBlank { "You" },
                     style = MaterialTheme.typography.caption1,
                     color = Color.White.copy(alpha = 0.5f)
                 )
@@ -166,7 +140,7 @@ private fun SelfScoreScreen(
                     contentAlignment = Alignment.Center
                 ) {
                     Icon(
-                        if (voiceEnabled) Icons.Filled.VolumeUp else Icons.Filled.VolumeOff,
+                        if (voiceEnabled) Icons.AutoMirrored.Filled.VolumeUp else Icons.AutoMirrored.Filled.VolumeOff,
                         contentDescription = if (voiceEnabled) "Mute" else "Unmute",
                         modifier = Modifier.size(18.dp),
                         tint = if (voiceEnabled) Color(0xFF4CAF50) else Color.White.copy(alpha = 0.5f)
@@ -211,7 +185,7 @@ private fun CutThroatScreen(
         ) {
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
                 Text(
-                    text = match.players.joinToString("  ·  ") { "${it.name}: ${it.score}" },
+                    text = match.players.joinToString("  -  ") { "${it.name.ifBlank { "?" }}: ${it.score}" },
                     style = MaterialTheme.typography.title1,
                     fontWeight = FontWeight.Bold,
                     color = Color.White
@@ -234,9 +208,9 @@ private fun CutThroatScreen(
                     .padding(horizontal = 8.dp),
                 horizontalArrangement = Arrangement.SpaceEvenly
             ) {
-                match.players.forEachIndexed { _, p ->
+                match.players.forEachIndexed { idx, p ->
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        Text(p.name, style = MaterialTheme.typography.caption3,
+                        Text(p.name.ifBlank { "Player ${idx + 1}" }, style = MaterialTheme.typography.caption3,
                             color = Color.White.copy(alpha = 0.7f), maxLines = 1)
                         Text(p.score.toString(), style = MaterialTheme.typography.title1,
                             fontWeight = FontWeight.Bold, color = Color.White)
@@ -260,7 +234,7 @@ private fun CutThroatScreen(
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
                         Text("SERVE", style = MaterialTheme.typography.caption3,
                             color = sportAccent(match.sportName))
-                        Text(server.name, style = MaterialTheme.typography.caption1,
+                        Text(server.name.ifBlank { "?" }, style = MaterialTheme.typography.caption1,
                             color = Color.White)
                         Text("+1", style = MaterialTheme.typography.title2,
                             fontWeight = FontWeight.Bold, color = Color.White)
@@ -277,7 +251,7 @@ private fun CutThroatScreen(
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
                         Text("RECEIVE", style = MaterialTheme.typography.caption3,
                             color = sportAccent(match.sportName).copy(alpha = 0.6f))
-                        Text(receiver.name, style = MaterialTheme.typography.caption1,
+                        Text(receiver.name.ifBlank { "?" }, style = MaterialTheme.typography.caption1,
                             color = Color.White)
                         Text("+1", style = MaterialTheme.typography.title2,
                             fontWeight = FontWeight.Bold, color = Color.White)
@@ -291,7 +265,7 @@ private fun CutThroatScreen(
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
                         Text("WAITING", style = MaterialTheme.typography.caption3,
                             color = Color.White.copy(alpha = 0.4f))
-                        Text(waiting.name, style = MaterialTheme.typography.caption2,
+                        Text(waiting.name.ifBlank { "?" }, style = MaterialTheme.typography.caption2,
                             color = Color.White.copy(alpha = 0.6f))
                     }
                 }
@@ -315,7 +289,7 @@ private fun CutThroatScreen(
                     contentAlignment = Alignment.Center
                 ) {
                     Icon(
-                        if (voiceEnabled) Icons.Filled.VolumeUp else Icons.Filled.VolumeOff,
+                        if (voiceEnabled) Icons.AutoMirrored.Filled.VolumeUp else Icons.AutoMirrored.Filled.VolumeOff,
                         contentDescription = if (voiceEnabled) "Mute" else "Unmute",
                         modifier = Modifier.size(18.dp),
                         tint = if (voiceEnabled) Color(0xFF4CAF50) else Color.White.copy(alpha = 0.5f)

@@ -5,8 +5,8 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.VolumeUp
-import androidx.compose.material.icons.filled.VolumeOff
+import androidx.compose.material.icons.automirrored.filled.VolumeUp
+import androidx.compose.material.icons.automirrored.filled.VolumeOff
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -19,41 +19,6 @@ import androidx.compose.ui.unit.sp
 import androidx.wear.compose.material.*
 import com.squashscore.model.GameState
 import com.squashscore.model.Match
-import com.squashscore.model.Sport
-
-// ── Sport color mapping ──
-
-private fun sportServerBg(sportName: String): Color = when (Sport.fromName(sportName)) {
-    Sport.SQUASH -> Color(0xFF1B5E20)
-    Sport.BADMINTON -> Color(0xFF0D47A1)
-    Sport.TENNIS -> Color(0xFF795548)
-    Sport.TABLE_TENNIS -> Color(0xFF4A148C)
-    Sport.PICKLEBALL -> Color(0xFF006064)
-    Sport.RACQUETBALL -> Color(0xFFB71C1C)
-    Sport.PADEL -> Color(0xFF2E7D32)
-}
-
-private fun sportReceiverBg(sportName: String): Color = when (Sport.fromName(sportName)) {
-    Sport.SQUASH -> Color(0xFF0D47A1)
-    Sport.BADMINTON -> Color(0xFF4A148C)
-    Sport.TENNIS -> Color(0xFFF57F17)
-    Sport.TABLE_TENNIS -> Color(0xFF1565C0)
-    Sport.PICKLEBALL -> Color(0xFF00838F)
-    Sport.RACQUETBALL -> Color(0xFF1B5E20)
-    Sport.PADEL -> Color(0xFF558B2F)
-}
-
-private fun sportAccent(sportName: String): Color = when (Sport.fromName(sportName)) {
-    Sport.SQUASH -> Color(0xFF4CAF50)
-    Sport.BADMINTON -> Color(0xFF64B5F6)
-    Sport.TENNIS -> Color(0xFFFFB300)
-    Sport.TABLE_TENNIS -> Color(0xFFAB47BC)
-    Sport.PICKLEBALL -> Color(0xFF26C6DA)
-    Sport.RACQUETBALL -> Color(0xFFEF5350)
-    Sport.PADEL -> Color(0xFF66BB6A)
-}
-
-// ── Score screen ──
 
 @Composable
 fun ScoreScreen(
@@ -86,7 +51,7 @@ fun ScoreScreen(
                     color = Color.White
                 )
                 Text(
-                    text = "${server.name}  –  ${receiver.name}",
+                    text = "${server.name}  -  ${receiver.name}",
                     style = MaterialTheme.typography.caption1,
                     color = Color.White.copy(alpha = 0.4f)
                 )
@@ -103,7 +68,11 @@ fun ScoreScreen(
 
     Box(modifier = Modifier.fillMaxSize()) {
         if (isResting) {
-            BetweenGamesOverlay(onNextSet = onContinue, onEndGame = onEndGame)
+            BetweenGamesOverlay(
+                onNextSet = onContinue,
+                onEndGame = onEndGame,
+                gamesPlayed = match.completedGames.size
+            )
         }
 
         Column(modifier = Modifier.fillMaxSize()) {
@@ -118,7 +87,7 @@ fun ScoreScreen(
             ) {
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
                     Text(
-                        server.name,
+                        server.name.ifBlank { "Player 1" },
                         style = MaterialTheme.typography.caption1,
                         color = Color.White.copy(alpha = 0.8f)
                     )
@@ -128,12 +97,12 @@ fun ScoreScreen(
                         fontWeight = FontWeight.Bold,
                         color = Color.White
                     )
-                    Text(
-                        if (match.simpleMode) "Player 1" else "SERVING",
-                        style = MaterialTheme.typography.caption3,
-                        color = sportAccent(match.sportName)
-                    )
                     if (!match.simpleMode) {
+                        Text(
+                            "SERVING",
+                            style = MaterialTheme.typography.caption3,
+                            color = sportAccent(match.sportName)
+                        )
                         Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
                             repeat(match.gamesNeeded) { i ->
                                 Box(
@@ -180,7 +149,7 @@ fun ScoreScreen(
                             contentAlignment = Alignment.Center
                         ) {
                             Icon(
-                                if (voiceEnabled) Icons.Filled.VolumeUp else Icons.Filled.VolumeOff,
+                                if (voiceEnabled) Icons.AutoMirrored.Filled.VolumeUp else Icons.AutoMirrored.Filled.VolumeOff,
                                 contentDescription = if (voiceEnabled) "Mute" else "Unmute",
                                 modifier = Modifier.size(14.dp),
                                 tint = if (voiceEnabled) Color(0xFF4CAF50) else Color.White.copy(alpha = 0.4f)
@@ -236,7 +205,7 @@ fun ScoreScreen(
             ) {
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
                     Text(
-                        receiver.name,
+                        receiver.name.ifBlank { "Player 2" },
                         style = MaterialTheme.typography.caption1,
                         color = Color.White.copy(alpha = 0.8f)
                     )
@@ -246,12 +215,12 @@ fun ScoreScreen(
                         fontWeight = FontWeight.Bold,
                         color = Color.White
                     )
-                    Text(
-                        if (match.simpleMode) "Player 2" else "RECEIVING",
-                        style = MaterialTheme.typography.caption3,
-                        color = sportAccent(match.sportName).copy(alpha = 0.8f)
-                    )
                     if (!match.simpleMode) {
+                        Text(
+                            "RECEIVING",
+                            style = MaterialTheme.typography.caption3,
+                            color = sportAccent(match.sportName).copy(alpha = 0.8f)
+                        )
                         Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
                             repeat(match.gamesNeeded) { i ->
                                 Box(
@@ -275,7 +244,8 @@ fun ScoreScreen(
 @Composable
 private fun BetweenGamesOverlay(
     onNextSet: () -> Unit,
-    onEndGame: () -> Unit
+    onEndGame: () -> Unit,
+    gamesPlayed: Int = 0
 ) {
     Box(
         modifier = Modifier
@@ -292,6 +262,13 @@ private fun BetweenGamesOverlay(
                 style = MaterialTheme.typography.title2,
                 color = Color(0xFFFFA726)
             )
+            if (gamesPlayed > 0) {
+                Text(
+                    "Set $gamesPlayed complete",
+                    style = MaterialTheme.typography.caption3,
+                    color = Color.White.copy(alpha = 0.5f)
+                )
+            }
             Row(
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {

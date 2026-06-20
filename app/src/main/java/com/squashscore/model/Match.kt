@@ -1,15 +1,17 @@
 package com.squashscore.model
 
+import kotlinx.serialization.Serializable
 import java.time.Instant
 import java.util.UUID
 
 /**
  * Core match state and scoring logic.
  */
+@Serializable
 data class Match(
     val id: String = UUID.randomUUID().toString(),
     val state: GameState = GameState.SETUP,
-    val createdAt: Instant = Instant.now(),
+    @Serializable(with = InstantSerializer::class) val createdAt: Instant = Instant.now(),
     val players: List<Player> = emptyList(),
     val pointsToWin: Int = 11,
     val bestOf: Int = 5,
@@ -46,15 +48,17 @@ data class Match(
         val effectiveTarget = if (pointsToWin > 0) pointsToWin else sport.defaultTarget
         val effectiveIndefinite = indefinite || !sport.usesStandardScoring
         return copy(
-        players = listOf(Player(name = playerA), Player(name = playerB)),
-        pointsToWin = effectiveTarget,
-        bestOf = bestOf,
-        indefinite = effectiveIndefinite,
-        simpleMode = simpleMode,
-        sportName = sportName,
-        state = GameState.WARMUP,
-        serverIndex = 0, receiverIndex = 1, waitingIndex = null
-    )
+            players = listOf(Player(name = playerA), Player(name = playerB)),
+            pointsToWin = effectiveTarget,
+            bestOf = bestOf,
+            indefinite = effectiveIndefinite,
+            simpleMode = simpleMode,
+            sportName = sportName,
+            state = GameState.WARMUP,
+            serverIndex = 0, receiverIndex = 1, waitingIndex = null,
+            pointHistory = emptyList(),
+            completedGames = emptyList()
+        )
     }
 
     fun setupThreePlayer(
@@ -69,16 +73,18 @@ data class Match(
         val effectiveTarget = if (pointsToWin > 0) pointsToWin else sport.defaultTarget
         val effectiveIndefinite = indefinite || !sport.usesStandardScoring
         return copy(
-        players = listOf(Player(name = playerA), Player(name = playerB), Player(name = playerC)),
-        pointsToWin = effectiveTarget,
-        bestOf = 1,
-        indefinite = effectiveIndefinite,
-        selfScoreOnly = selfScoreOnly,
-        simpleMode = simpleMode,
-        sportName = sportName,
-        state = GameState.WARMUP,
-        serverIndex = 0, receiverIndex = 1, waitingIndex = 2
-    )
+            players = listOf(Player(name = playerA), Player(name = playerB), Player(name = playerC)),
+            pointsToWin = effectiveTarget,
+            bestOf = 1,
+            indefinite = effectiveIndefinite,
+            selfScoreOnly = selfScoreOnly,
+            simpleMode = simpleMode,
+            sportName = sportName,
+            state = GameState.WARMUP,
+            serverIndex = 0, receiverIndex = 1, waitingIndex = 2,
+            pointHistory = emptyList(),
+            completedGames = emptyList()
+        )
     }
 
     fun startMatch(): Match = copy(state = GameState.PLAYING)
@@ -91,12 +97,17 @@ data class Match(
         // Simple mode (2-player) or self-score (3-player): just increment, no game logic
         if (simpleMode || selfScoreOnly) {
             val scorer = if (selfScoreOnly) 0 else playerIndex
+            if (scorer >= players.size) return null
             val event = PointEvent(
                 scorerIndex = scorer,
                 previousServer = serverIndex,
                 previousReceiver = receiverIndex,
                 previousWaiting = waitingIndex,
-                previousScores = players.map { it.score }
+                previousScores = players.map { it.score },
+                previousState = state,
+                previousGamesWon = players.map { it.gamesWon },
+                previousCompletedGamesCount = completedGames.size,
+                previousCurrentGame = currentGame
             )
             return copy(
                 pointHistory = pointHistory + event,
@@ -113,7 +124,11 @@ data class Match(
             previousServer = serverIndex,
             previousReceiver = receiverIndex,
             previousWaiting = waitingIndex,
-            previousScores = players.map { it.score }
+            previousScores = players.map { it.score },
+            previousState = state,
+            previousGamesWon = players.map { it.gamesWon },
+            previousCompletedGamesCount = completedGames.size,
+            previousCurrentGame = currentGame
         )
 
         val updated = copy(
@@ -130,22 +145,40 @@ data class Match(
     fun undoPoint(): Match? {
         val last = pointHistory.lastOrNull() ?: return null
         if (state != GameState.PLAYING && state != GameState.BETWEEN_GAMES) return null
+
+        // If we're in BETWEEN_GAMES, the last point triggered a game completion.
+        // Undo must also undo the game completion: restore gamesWon, completedGames, currentGame.
+        val wasGameCompletion = state == GameState.BETWEEN_GAMES
+
         return copy(
             players = players.mapIndexed { i, p ->
-                p.copy(score = last.previousScores.getOrElse(i) { p.score })
+                p.copy(
+                    score = last.previousScores.getOrElse(i) { p.score },
+                    gamesWon = if (wasGameCompletion) last.previousGamesWon.getOrElse(i) { p.gamesWon } else p.gamesWon
+                )
             },
             serverIndex = last.previousServer,
             receiverIndex = last.previousReceiver,
             waitingIndex = last.previousWaiting,
             pointHistory = pointHistory.dropLast(1),
-            state = if (state == GameState.BETWEEN_GAMES) GameState.PLAYING else state
+            state = if (wasGameCompletion) GameState.PLAYING else state,
+            completedGames = if (wasGameCompletion) completedGames.take(last.previousCompletedGamesCount) else completedGames,
+            currentGame = if (wasGameCompletion) last.previousCurrentGame else currentGame
         )
     }
 
     // ── Manual end ──
 
     fun endManually(): Match {
-        val currentLeader = players.withIndex().maxByOrNull { (_, p) -> p.score }
+        // If between games (scores are 0), determine winner by gamesWon
+        if (state == GameState.BETWEEN_GAMES || (players.all { it.score == 0 } && completedGames.isNotEmpty())) {
+            return copy(state = GameState.FINISHED)
+        }
+
+        // During play: award current game to score leader
+        val currentLeader = players.withIndex().maxByOrNull { (_, p) ->
+            p.score
+        }
         val leaderIndex = currentLeader?.index ?: 0
         val result = GameResult(
             gameNumber = currentGame,
@@ -221,14 +254,20 @@ data class Match(
     }
 }
 
+@Serializable
 data class PointEvent(
     val scorerIndex: Int,
     val previousServer: Int,
     val previousReceiver: Int,
     val previousWaiting: Int?,
-    val previousScores: List<Int>
+    val previousScores: List<Int>,
+    val previousState: GameState = GameState.PLAYING,
+    val previousGamesWon: List<Int> = emptyList(),
+    val previousCompletedGamesCount: Int = 0,
+    val previousCurrentGame: Int = 1
 )
 
+@Serializable
 data class GameResult(
     val gameNumber: Int,
     val scores: List<Int>,

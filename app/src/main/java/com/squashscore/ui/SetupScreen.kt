@@ -1,15 +1,18 @@
 package com.squashscore.ui
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Check
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
@@ -18,21 +21,25 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.wear.compose.material.Button
-import androidx.wear.compose.material.ButtonDefaults
 import androidx.wear.compose.material.Chip
 import androidx.wear.compose.material.ChipDefaults
-import androidx.wear.compose.material.Icon
 import androidx.wear.compose.material.MaterialTheme
 import androidx.wear.compose.material.ScalingLazyColumn
 import androidx.wear.compose.material.Text
 import com.squashscore.model.Sport
 
+/**
+ * Single-screen setup using ScalingLazyColumn for scrollability.
+ * On round Wear OS screens the content overflows — must be scrollable.
+ */
 @Composable
 fun SetupScreen(
     onStartTwoPlayer: (String, String, Boolean, Boolean, String) -> Unit,
@@ -42,345 +49,237 @@ fun SetupScreen(
     onVoiceEnabledChanged: (Boolean) -> Unit,
     gestureScoring: Boolean = false,
     onGestureScoringChanged: (Boolean) -> Unit = {},
+    gyroAvailable: Boolean = true,
     savedPlayer1Name: String = "",
     currentSport: Sport = Sport.SQUASH,
-    onSportChanged: (Sport) -> Unit
+    onSportChanged: (Sport) -> Unit,
+    savedSimpleMode: Boolean = true
 ) {
-    var showSettings by remember { mutableStateOf(false) }
-    var showSportPicker by remember { mutableStateOf(false) }
     var playerCount by remember { mutableIntStateOf(2) }
     var playerA by remember { mutableStateOf(savedPlayer1Name) }
     var playerB by remember { mutableStateOf("") }
     var playerC by remember { mutableStateOf("") }
-    var selfScoreOnly by remember { mutableStateOf(true) }
+    var simpleMode by remember { mutableStateOf(savedSimpleMode) }
     var indefinite by remember { mutableStateOf(true) }
-    var gestureScoring by remember { mutableStateOf(false) }
 
-    if (showSettings) {
-    SettingsScreen(
-        currentSport = currentSport,
-        onSportChanged = { onSportChanged(it) },
-        playerCount = playerCount,
-        onPlayerCountChange = { playerCount = it },
-        playerA = playerA,
-        onPlayerAChange = { playerA = it },
-        playerB = playerB,
-        onPlayerBChange = { playerB = it },
-        playerC = playerC,
-        onPlayerCChange = { playerC = it },
-        selfScoreOnly = selfScoreOnly,
-        onSelfScoreOnlyChange = { selfScoreOnly = it },
-        indefinite = indefinite,
-        onIndefiniteChange = { indefinite = it },
-        voiceEnabled = voiceEnabled,
-        onVoiceEnabledChanged = onVoiceEnabledChanged,
-        gestureScoring = gestureScoring,
-        onGestureScoringChanged = { gestureScoring = it },
-        onStart = { p1, p2, p3, selfOnly, indf ->
-            if (playerCount == 3) {
-                onStartThreePlayer(p1, p2, p3, selfOnly, indf, selfOnly, currentSport.name)
-            } else {
-                onStartTwoPlayer(p1, p2, indf, false, currentSport.name)
-            }
-        },
-        onBack = { showSettings = false }
-    )
-    } else if (showSportPicker) {
-        SportPickerScreen(
-            current = currentSport,
-            onSelect = { s ->
-                onSportChanged(s)
-                showSportPicker = false
-            },
-            onBack = { showSportPicker = false }
-        )
-    } else {
-        QuickStartScreen(
-            sport = currentSport,
-            playerCount = playerCount,
-            onPlayerCountChange = { playerCount = it },
-            onSelectSport = { showSportPicker = true },
-            onStart = {
-                val p1 = playerA.ifBlank { "You" }
-                val p2 = playerB.ifBlank { "Player 2" }
-                if (playerCount == 3) {
-                    val p3 = playerC.ifBlank { "Player 3" }
-                    onStartThreePlayer(p1, p2, p3, selfScoreOnly, true, true, currentSport.name)
-                } else {
-                    onStartTwoPlayer(p1, p2, true, true, currentSport.name)
-                }
-            },
-            onSettings = { showSettings = true },
-            onHistory = onShowHistory
-        )
-    }
-}
-
-// ── Quick start (minimal) view ──
-
-@Composable
-private fun QuickStartScreen(
-    sport: Sport,
-    playerCount: Int,
-    onPlayerCountChange: (Int) -> Unit,
-    onSelectSport: () -> Unit,
-    onStart: () -> Unit,
-    onSettings: () -> Unit,
-    onHistory: () -> Unit
-) {
-    ScalingLazyColumn(
-        modifier = Modifier.fillMaxSize(),
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        item {
-            Chip(
-                onClick = onSelectSport,
-                label = { Text(sport.displayName, style = MaterialTheme.typography.title3) },
-                colors = ChipDefaults.primaryChipColors()
-            )
-        }
-
-        item {
-            Chip(
-                onClick = { onPlayerCountChange(if (playerCount == 2) 3 else 2) },
-                label = { Text("${playerCount} Players") },
-                colors = ChipDefaults.secondaryChipColors()
-            )
-        }
-
-        item {
-            Button(
-                onClick = onStart,
-                modifier = Modifier.fillMaxWidth(0.9f).padding(vertical = 8.dp)
-            ) {
-                Text("Start", style = MaterialTheme.typography.title2)
-            }
-        }
-
-        item {
-            Button(
-                onClick = onSettings,
-                modifier = Modifier.fillMaxWidth(0.9f),
-                colors = ButtonDefaults.secondaryButtonColors()
-            ) {
-                Text("Settings", style = MaterialTheme.typography.caption1)
-            }
-        }
-
-        item {
-            Button(
-                onClick = onHistory,
-                modifier = Modifier.fillMaxWidth(0.9f),
-                colors = ButtonDefaults.secondaryButtonColors()
-            ) {
-                Text("History", style = MaterialTheme.typography.caption1)
-            }
-        }
-    }
-}
-
-// ── Sport picker (scrolling list) ──
-
-@Composable
-private fun SportPickerScreen(
-    current: Sport,
-    onSelect: (Sport) -> Unit,
-    onBack: () -> Unit
-) {
-    ScalingLazyColumn(
-        modifier = Modifier.fillMaxSize(),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(2.dp)
-    ) {
-        item {
-            Text("Select Sport", style = MaterialTheme.typography.title3)
-        }
-
-        Sport.entries.forEach { sport ->
-            item {
-                Chip(
-                    onClick = { onSelect(sport) },
-                    label = {
-                        if (sport == current) {
-                            Text("${sport.displayName}  ", style = MaterialTheme.typography.title2)
-                        } else {
-                            Text(sport.displayName, style = MaterialTheme.typography.caption1)
-                        }
-                    },
-                    icon = if (sport == current) {
-                        { Icon(Icons.Default.Check, contentDescription = null, modifier = Modifier.padding(end = 4.dp)) }
-                    } else null,
-                    colors = if (sport == current) ChipDefaults.primaryChipColors()
-                        else ChipDefaults.secondaryChipColors()
-                )
-            }
-        }
-
-        item {
-            Button(
-                onClick = onBack,
-                modifier = Modifier.fillMaxWidth(0.85f),
-                colors = ButtonDefaults.secondaryButtonColors()
-            ) {
-                Text("Back")
-            }
-        }
-    }
-}
-
-// ── Full settings view ──
-
-@Composable
-private fun SettingsScreen(
-    currentSport: Sport,
-    onSportChanged: (Sport) -> Unit,
-    playerCount: Int,
-    onPlayerCountChange: (Int) -> Unit,
-    playerA: String,
-    onPlayerAChange: (String) -> Unit,
-    playerB: String,
-    onPlayerBChange: (String) -> Unit,
-    playerC: String,
-    onPlayerCChange: (String) -> Unit,
-    selfScoreOnly: Boolean,
-    onSelfScoreOnlyChange: (Boolean) -> Unit,
-    indefinite: Boolean,
-    onIndefiniteChange: (Boolean) -> Unit,
-    voiceEnabled: Boolean,
-    onVoiceEnabledChanged: (Boolean) -> Unit,
-    gestureScoring: Boolean,
-    onGestureScoringChanged: (Boolean) -> Unit,
-    onStart: (String, String, String, Boolean, Boolean) -> Unit,
-    onBack: () -> Unit
-) {
-    var showSportPicker by remember { mutableStateOf(false) }
-
-    if (showSportPicker) {
-        SportPickerScreen(
-            current = currentSport,
-            onSelect = { s ->
-                onSportChanged(s)
-                showSportPicker = false
-            },
-            onBack = { showSportPicker = false }
-        )
-        return
-    }
+    val sports = Sport.entries
+    val sportColor = sportAccentColor(currentSport)
 
     ScalingLazyColumn(
         modifier = Modifier.fillMaxSize(),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(4.dp)
     ) {
-        item {
-            Text("Settings", style = MaterialTheme.typography.title3)
-        }
-
-        // Sport — tap to open picker
+        // ── Sport — tap to cycle ──
         item {
             Chip(
-                onClick = { showSportPicker = true },
-                label = { Text(currentSport.displayName) },
-                colors = ChipDefaults.primaryChipColors()
+                onClick = {
+                    val i = sports.indexOf(currentSport)
+                    val next = sports[(i + 1) % sports.size]
+                    onSportChanged(next)
+                },
+                label = { Text(currentSport.displayName, style = MaterialTheme.typography.title3) },
+                colors = ChipDefaults.primaryChipColors(
+                    backgroundColor = sportColor.copy(alpha = 0.3f),
+                    contentColor = Color.White
+                )
             )
         }
 
-        // Player count
+        // ── Target score / mode display ──
+        if (simpleMode && playerCount == 2) {
+            item {
+                Text(
+                    "Counter mode",
+                    style = MaterialTheme.typography.caption3,
+                    color = Color.White.copy(alpha = 0.4f)
+                )
+            }
+        } else if (!simpleMode && !indefinite && playerCount == 2 && currentSport.usesStandardScoring) {
+            item {
+                Text(
+                    "To ${currentSport.defaultTarget}, best of 5",
+                    style = MaterialTheme.typography.caption3,
+                    color = Color.White.copy(alpha = 0.5f)
+                )
+            }
+        }
+
+        // ── Player count ──
         item {
             Chip(
-                onClick = { onPlayerCountChange(if (playerCount == 2) 3 else 2) },
-                label = { Text("${playerCount} Players") },
+                onClick = { playerCount = if (playerCount == 2) 3 else 2 },
+                label = { Text("${playerCount} players") },
                 colors = ChipDefaults.secondaryChipColors()
             )
         }
 
-        // Names
-        item {
-            PlayerNameField(value = playerA, onValueChange = onPlayerAChange, placeholder = "You")
-        }
-        item {
-            PlayerNameField(value = playerB, onValueChange = onPlayerBChange, placeholder = "Player 2")
+        // ── Scoring mode toggle (2-player, standard scoring sports only) ──
+        if (playerCount == 2 && currentSport.usesStandardScoring) {
+            item {
+                Chip(
+                    onClick = { simpleMode = !simpleMode },
+                    label = { Text(if (simpleMode) "Simple" else "Full scoring") },
+                    colors = ChipDefaults.secondaryChipColors()
+                )
+            }
+            // Target toggle — only in Full scoring (Simple is always indefinite)
+            if (!simpleMode) {
+                item {
+                    Chip(
+                        onClick = { indefinite = !indefinite },
+                        label = { Text(if (indefinite) "Indefinite" else "To ${currentSport.defaultTarget}") },
+                        colors = ChipDefaults.secondaryChipColors()
+                    )
+                }
+            }
         }
 
-        // Scoring mode (3-player)
+        // ── Names ──
+        item {
+            PlayerNameField(value = playerA, onValueChange = { playerA = it }, placeholder = "You")
+        }
+        item {
+            PlayerNameField(value = playerB, onValueChange = { playerB = it }, placeholder = "Player 2")
+        }
         if (playerCount == 3) {
             item {
-                PlayerNameField(value = playerC, onValueChange = onPlayerCChange, placeholder = "Player 3")
-            }
-            item {
-                Chip(
-                    onClick = { onSelfScoreOnlyChange(!selfScoreOnly) },
-                    label = { Text(if (selfScoreOnly) "My score only" else "All scores") },
-                    colors = ChipDefaults.secondaryChipColors()
-                )
+                PlayerNameField(value = playerC, onValueChange = { playerC = it }, placeholder = "Player 3")
             }
         }
 
-        // Game length
-        item {
-            if (currentSport.usesStandardScoring) {
-                Chip(
-                    onClick = { onIndefiniteChange(!indefinite) },
-                    label = { Text(if (indefinite) "Indefinite" else "To ${currentSport.defaultTarget}") },
-                    colors = ChipDefaults.secondaryChipColors()
-                )
-            } else {
-                Chip(
-                    onClick = { },
-                    label = { Text("Standard scoring") },
-                    colors = ChipDefaults.secondaryChipColors(),
-                    enabled = false
-                )
-            }
-        }
-
-        // Voice
-        item {
-            Chip(
-                onClick = { onVoiceEnabledChanged(!voiceEnabled) },
-                label = { Text(if (voiceEnabled) "Voice on" else "Voice muted") },
-                colors = ChipDefaults.secondaryChipColors()
-            )
-        }
-
-        // Gesture scoring
-        item {
-            Chip(
-                onClick = { onGestureScoringChanged(!gestureScoring) },
-                label = { Text(if (gestureScoring) "Twist to score" else "Gesture off") },
-                colors = ChipDefaults.secondaryChipColors()
-            )
-        }
-
-        // Start
+        // ── START ──
         item {
             Button(
                 onClick = {
                     val p1 = playerA.ifBlank { "You" }
                     val p2 = playerB.ifBlank { "Player 2" }
-                    val p3 = playerC.ifBlank { "Player 3" }
-                    onStart(p1, p2, p3, selfScoreOnly, indefinite)
+                    if (playerCount == 3) {
+                        val p3 = playerC.ifBlank { "Player 3" }
+                        onStartThreePlayer(p1, p2, p3, true, true, true, currentSport.name)
+                    } else {
+                        // Simple mode is always indefinite (counter).
+                        // Full scoring respects the indefinite toggle.
+                        val effectiveIndefinite = simpleMode || indefinite
+                        onStartTwoPlayer(p1, p2, effectiveIndefinite, simpleMode, currentSport.name)
+                    }
                 },
                 modifier = Modifier.fillMaxWidth(0.85f)
             ) {
-                Text("Start")
+                Text("Start", style = MaterialTheme.typography.title2, fontWeight = FontWeight.Bold)
             }
         }
 
-        // Back
+        // ── Bottom toggles ──
         item {
-            Button(
-                onClick = onBack,
-                modifier = Modifier.fillMaxWidth(0.85f),
-                colors = ButtonDefaults.secondaryButtonColors()
+            Row(
+                modifier = Modifier.fillMaxWidth(0.9f),
+                horizontalArrangement = Arrangement.SpaceEvenly,
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                Text("Back")
+                BottomToggle(
+                    label = if (voiceEnabled) "Voice" else "Muted",
+                    active = voiceEnabled,
+                    onClick = { onVoiceEnabledChanged(!voiceEnabled) }
+                )
+                BottomToggle(
+                    label = if (!gyroAvailable) "No gyro"
+                            else if (gestureScoring) "Twist"
+                            else "Gesture",
+                    active = gestureScoring,
+                    enabled = gyroAvailable,
+                    onClick = { if (gyroAvailable) onGestureScoringChanged(!gestureScoring) }
+                )
+                BottomToggle(
+                    label = "History",
+                    active = false,
+                    onClick = onShowHistory
+                )
             }
         }
     }
 }
 
-// ── Shared name field ──
+// ── Sport accent color (shared) ──
+
+fun sportAccentColor(sport: Sport): Color = when (sport) {
+    Sport.SQUASH -> Color(0xFF4CAF50)
+    Sport.BADMINTON -> Color(0xFF64B5F6)
+    Sport.TENNIS -> Color(0xFFFFB300)
+    Sport.TABLE_TENNIS -> Color(0xFFAB47BC)
+    Sport.PICKLEBALL -> Color(0xFF26C6DA)
+    Sport.RACQUETBALL -> Color(0xFFEF5350)
+    Sport.PADEL -> Color(0xFF66BB6A)
+}
+
+fun sportServerBg(sportName: String): Color = when (Sport.fromName(sportName)) {
+    Sport.SQUASH -> Color(0xFF1B5E20)
+    Sport.BADMINTON -> Color(0xFF0D47A1)
+    Sport.TENNIS -> Color(0xFF795548)
+    Sport.TABLE_TENNIS -> Color(0xFF4A148C)
+    Sport.PICKLEBALL -> Color(0xFF006064)
+    Sport.RACQUETBALL -> Color(0xFFB71C1C)
+    Sport.PADEL -> Color(0xFF2E7D32)
+}
+
+fun sportReceiverBg(sportName: String): Color = when (Sport.fromName(sportName)) {
+    Sport.SQUASH -> Color(0xFF0D47A1)
+    Sport.BADMINTON -> Color(0xFF4A148C)
+    Sport.TENNIS -> Color(0xFFF57F17)
+    Sport.TABLE_TENNIS -> Color(0xFF1565C0)
+    Sport.PICKLEBALL -> Color(0xFF00838F)
+    Sport.RACQUETBALL -> Color(0xFF1B5E20)
+    Sport.PADEL -> Color(0xFF558B2F)
+}
+
+fun sportAccent(sportName: String): Color = sportAccentColor(Sport.fromName(sportName))
+
+// ── Small circular toggle used in the bottom row ──
+
+@Composable
+private fun BottomToggle(
+    label: String,
+    active: Boolean,
+    enabled: Boolean = true,
+    onClick: () -> Unit
+) {
+    Column(
+        modifier = Modifier.clickable(enabled = enabled) { onClick() },
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(2.dp)
+    ) {
+        Box(
+            modifier = Modifier
+                .size(28.dp)
+                .clip(CircleShape)
+                .background(
+                    when {
+                        !enabled -> Color(0xFF2A2A2A)
+                        active -> Color(0xFF1B5E20)
+                        else -> Color.White.copy(alpha = 0.08f)
+                    }
+                ),
+            contentAlignment = Alignment.Center
+        ) {
+            Text(
+                text = if (active) "\u2713" else "",
+                color = if (active) Color(0xFF4CAF50) else Color.White.copy(alpha = 0.3f),
+                fontSize = 14.sp
+            )
+        }
+        Text(
+            text = label,
+            style = MaterialTheme.typography.caption3,
+            color = when {
+                !enabled -> Color(0xFFCF6679).copy(alpha = 0.7f)
+                active -> Color.White
+                else -> Color.White.copy(alpha = 0.4f)
+            }
+        )
+    }
+}
+
+// ── Name field ──
 
 @Composable
 private fun PlayerNameField(
@@ -393,7 +292,7 @@ private fun PlayerNameField(
         modifier = modifier
             .fillMaxWidth(0.85f)
             .background(Color(0xFF2A2A2A), RoundedCornerShape(8.dp))
-            .padding(12.dp),
+            .padding(horizontal = 14.dp, vertical = 10.dp),
         contentAlignment = Alignment.Center
     ) {
         if (value.isEmpty()) {

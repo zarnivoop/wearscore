@@ -19,20 +19,26 @@ class MainActivity : FragmentActivity(), AmbientModeSupport.AmbientCallbackProvi
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
+        // Keep the activity visible even when the device is "locked".
+        setTurnScreenOn(true)
+        setShowWhenLocked(true)
+
         ambientController = AmbientModeSupport.attach(this)
 
         setContent {
             val state by vm.uiState.collectAsState()
-            var currentSport = vm.loadLastSport()
+            var currentSport by remember { mutableStateOf(vm.loadLastSport()) }
 
-            // Only keep CPU alive during an active game — setup/summary
-            // screens should let the watch dim and sleep normally.
+            // Block screen timeout during gameplay so the watch never
+            // fully turns off mid-rally. Ambient mode handles dimming.
             val keepScreenOn = state.screen == MatchViewModel.Screen.PLAYING
             LaunchedEffect(keepScreenOn) {
                 if (keepScreenOn) {
-                    window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+                    window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON
+                            or WindowManager.LayoutParams.FLAG_SHOW_WHEN_LOCKED)
                 } else {
-                    window.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+                    window.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON
+                            or WindowManager.LayoutParams.FLAG_SHOW_WHEN_LOCKED)
                 }
             }
 
@@ -52,12 +58,14 @@ class MainActivity : FragmentActivity(), AmbientModeSupport.AmbientCallbackProvi
                         onVoiceEnabledChanged = { vm.setVoiceEnabled(it) },
                         gestureScoring = state.gestureScoring,
                         onGestureScoringChanged = { vm.setGestureScoring(it) },
+                        gyroAvailable = state.gyroAvailable,
                         savedPlayer1Name = vm.loadPlayer1Name(),
                         currentSport = currentSport,
                         onSportChanged = { s ->
                             currentSport = s
                             vm.saveLastSport(s)
-                        }
+                        },
+                        savedSimpleMode = vm.loadSimpleMode()
                     )
                 }
                 MatchViewModel.Screen.PLAYING -> {
@@ -87,7 +95,8 @@ class MainActivity : FragmentActivity(), AmbientModeSupport.AmbientCallbackProvi
                 MatchViewModel.Screen.SUMMARY -> {
                     MatchSummaryScreen(
                         match = state.match,
-                        onNewMatch = { vm.newMatch() }
+                        onNewMatch = { vm.newMatch() },
+                        onRematch = { vm.rematch() }
                     )
                 }
                 MatchViewModel.Screen.HISTORY -> {
@@ -113,10 +122,5 @@ class MainActivity : FragmentActivity(), AmbientModeSupport.AmbientCallbackProvi
                 // Periodic ambient refresh — keep the score visible
             }
         }
-    }
-
-    override fun onDestroy() {
-        super.onDestroy()
-        vm.tts.shutdown()
     }
 }

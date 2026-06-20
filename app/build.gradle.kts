@@ -64,7 +64,7 @@ dependencies {
     implementation("androidx.fragment:fragment-ktx:1.8.5")
 
     // Serialization (for JSON persistence)
-    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.7.3")
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.3")
 
     // Wearable Data Layer (phone companion sync)
     implementation("com.google.android.gms:play-services-wearable:19.0.0")
